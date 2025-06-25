@@ -16,13 +16,15 @@ import {
 import { Refresh as RefreshIcon, Wifi as WifiIcon } from '@mui/icons-material'
 import PlantSelector from '../components/PlantSelector'
 import QueueTable from '../components/QueueTable'
+import VehicleLegend from '../components/VehicleLegend'
 import { useVehicleQueue } from '../hooks/useVehicleQueue'
 
 const Dashboard = () => {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
-  const [selectedPlant, setSelectedPlant] = useState(1)
+  const [selectedPlant, setSelectedPlant] = useState(null)
   const [currentDriverVehicle, setCurrentDriverVehicle] = useState(null)
+  const [searchTerm, setSearchTerm] = useState('')
   const autoRefreshIntervalRef = useRef(null)
   
   const { 
@@ -43,7 +45,7 @@ const Dashboard = () => {
 
   // Auto-refresh every 30 seconds - only start when we have a plant selected
   useEffect(() => {
-    if (!selectedPlant?.ZoneID) return
+    if (!selectedPlant?.ZoneID && !selectedPlant?.ID) return
 
     // Clear existing interval
     if (autoRefreshIntervalRef.current) {
@@ -60,7 +62,7 @@ const Dashboard = () => {
         clearInterval(autoRefreshIntervalRef.current)
       }
     }
-  }, [selectedPlant?.ZoneID, refresh])
+  }, [selectedPlant?.ZoneID, selectedPlant?.ID, refresh])
 
   const isRecentUpdate = lastUpdate && 
     (Date.now() - lastUpdate.getTime()) < 60000 // Within last minute
@@ -69,14 +71,27 @@ const Dashboard = () => {
     setSelectedPlant(plant)
   }
 
+  const handleSearchChange = (value) => {
+    setSearchTerm(value)
+  }
+
   return (
     <Box sx={{ flexGrow: 1, bgcolor: '#f5f5f5', minHeight: '100vh' }}>
       {/* Header */}
-      <AppBar position="sticky" elevation={1}>
-        <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            ATSS Vehicle Queue
-          </Typography>
+      <AppBar 
+        position="sticky" 
+        elevation={0}
+        sx={{ 
+          backgroundColor: 'background.paper',
+          color: 'text.primary',
+          boxShadow: '0px 2px 4px -1px rgba(0,0,0,0.2), 0px 4px 5px 0px rgba(0,0,0,0.14), 0px 1px 10px 0px rgba(0,0,0,0.12)'
+        }}
+      >
+        <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', py:2 }}>
+          <PlantSelector 
+            selectedPlant={selectedPlant}
+            onPlantChange={handlePlantChange}
+          />
           
           {/* Live indicator */}
           {isRecentUpdate && (
@@ -90,7 +105,7 @@ const Dashboard = () => {
           )}
           
           {/* Manual refresh button */}
-          <Button
+          {/* <Button
             color="inherit"
             onClick={refresh}
             disabled={loading}
@@ -98,13 +113,13 @@ const Dashboard = () => {
             size={isMobile ? 'small' : 'medium'}
           >
             {isMobile ? '' : 'Refresh'}
-          </Button>
+          </Button> */}
         </Toolbar>
       </AppBar>
 
-      <Container maxWidth="xl" sx={{ py: 2 }}>
+      <Container maxWidth="xxl" sx={{ py: 2 }}>
         {/* Controls */}
-        <Card sx={{ mb: 2 }}>
+        {/* <Card sx={{ mb: 2 }}>
           <CardContent>
             <Box 
               display="flex" 
@@ -112,10 +127,7 @@ const Dashboard = () => {
               alignItems={isMobile ? 'stretch' : 'center'} 
               gap={2}
             >
-              <PlantSelector 
-                selectedPlant={selectedPlant}
-                onPlantChange={handlePlantChange}
-              />
+   
               
               <Box flexGrow={1} />
               
@@ -126,7 +138,7 @@ const Dashboard = () => {
               )}
             </Box>
           </CardContent>
-        </Card>
+        </Card> */}
 
         {/* Error Alert */}
         {error && (
@@ -150,26 +162,34 @@ const Dashboard = () => {
           </Alert>
         )}
 
+        {/* Legend and Search */}
+        <VehicleLegend 
+          searchTerm={searchTerm}
+          onSearchChange={handleSearchChange}
+        />
+
         {/* Queue Table */}
-        <Card>
-          <CardContent sx={{ p: 0 }}>
+
             <QueueTable 
               vehicles={vehicles}
               loading={loading}
               currentDriverVehicle={currentDriverVehicle}
+              searchTerm={searchTerm}
             />
-          </CardContent>
-        </Card>
+
 
         {/* Footer info */}
         <Box sx={{ mt: 2, textAlign: 'center' }}>
           <Typography variant="caption" color="textSecondary">
-            Queue updates automatically every 30 seconds • Real-time updates via WebSocket
+            {/* Queue updates automatically every 30 seconds • */}
+             Real-time updates via WebSocket
           </Typography>
         </Box>
       </Container>
     </Box>
   )
 }
+
+      
 
 export default Dashboard

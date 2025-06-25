@@ -28,7 +28,7 @@ const PlantSelector = ({ selectedPlant, onPlantChange }) => {
         
         // Auto-select first plant if none selected
         if (plantsData.length > 0 && !selectedPlant) {
-          onPlantChange(plantsData[0])
+          onPlantChange(plantsData[6])
         }
       } catch (error) {
         console.error('Failed to fetch plants:', error)
@@ -53,9 +53,10 @@ const PlantSelector = ({ selectedPlant, onPlantChange }) => {
 
   return (
     <Box sx={{ minWidth: 200 }}>
-      <FormControl fullWidth disabled={loading}>
+      <FormControl fullWidth disabled={loading}  size="small">
         <InputLabel>Batching Plant</InputLabel>
         <Select
+          size='small'
           value={selectedPlant?.ZoneID || selectedPlant?.ID || ''}
           label="Batching Plant"
           onChange={(e) => {

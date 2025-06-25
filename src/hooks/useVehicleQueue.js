@@ -39,7 +39,7 @@ export const useVehicleQueue = (selectedPlant) => {
       abortControllerRef.current = new AbortController()
 
       const response = await axiosATSSInstance.get(
-        `/vehicle/priority?origin_id=${selectedPlant.ZoneID}&permits=true`,
+        `/vehicle/priority?origin_id=${selectedPlant.ZoneID}&permits=false`,
         { signal: abortControllerRef.current.signal }
       )
 
@@ -110,12 +110,17 @@ export const useVehicleQueue = (selectedPlant) => {
     fetchVehicleQueue()
   }
 
+  const refresh = () => {
+    console.log('refresh')
+    fetchVehicleQueue(true)
+  }
+
   return {
     vehicles,
     loading,
     error,
     lastUpdate,
-    retry,
-    refresh: () => fetchVehicleQueue(true)
+    retry, 
+    refresh
   }
 }
