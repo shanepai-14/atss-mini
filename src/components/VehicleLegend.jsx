@@ -46,12 +46,12 @@ const VehicleQLabel = ({ label, boxColor, textColor, priority = false, isMobile 
         color={textColor}
         fontWeight="bold"
         sx={{
-          fontSize: isMobile ? '0.75rem' : '0.875rem',
+          fontSize: isMobile ? '0.60rem' : '0.875rem',
           whiteSpace: 'nowrap',
           overflow: 'hidden'
         }}
       >
-        {label}
+        {label == 'Immediate Attention' && isMobile ? 'Attention' : label}
       </Typography>
     </Stack>
   )

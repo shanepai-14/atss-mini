@@ -76,10 +76,10 @@ const Dashboard = () => {
   }
 
   return (
-    <Box sx={{ flexGrow: 1, bgcolor: '#f5f5f5', minHeight: '100vh' }}>
+    <Box sx={{ flexGrow: 1, bgcolor: '#f5f5f5', height: '100vh' }}>
       {/* Header */}
       <AppBar 
-        position="sticky" 
+        position="static" 
         elevation={0}
         sx={{ 
           backgroundColor: 'background.paper',
@@ -143,11 +143,11 @@ const Dashboard = () => {
 
 
         {/* Footer info */}
-        <Box sx={{ mt: 2, textAlign: 'center' }}>
+        {/* <Box sx={{ mt: 2, textAlign: 'center' }}>
           <Typography variant="caption" color="textSecondary">
             Queue updates automatically every 30 seconds • Real-time updates via WebSocket
           </Typography>
-        </Box>
+        </Box> */}
       </Container>
     </Box>
   )

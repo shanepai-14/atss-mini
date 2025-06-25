@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
   Table,
   TableBody,
@@ -108,6 +108,59 @@ const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => 
   const isTablet = useMediaQuery(theme.breakpoints.down('lg'))
   const [anchorEl, setAnchorEl] = useState(null)
   const [selectedVehicle, setSelectedVehicle] = useState(null)
+  const [itemsPerSlide, setItemsPerSlide] = useState(8) // default fallback
+  const containerRef = useRef(null)
+
+  // Calculate items per slide based on viewport
+  useEffect(() => {
+    const calculateItemsPerSlide = () => {
+      // Use the actual available viewport height instead of container
+      const viewportHeight = window.innerHeight
+      const headerHeight = 60 // Approximate header height
+      const paginationHeight = 40 // Approximate pagination height  
+      const otherUIElements = 200 // Navigation, margins, etc.
+      
+      const availableHeight = viewportHeight - headerHeight - paginationHeight - otherUIElements
+      
+      // More accurate row height estimation based on actual CSS
+      const estimatedRowHeight = isMobile ? 28 : 36 // accounting for padding and line-height
+      
+      const calculatedItems = Math.floor(availableHeight / estimatedRowHeight)
+      
+      // Set minimum and maximum bounds
+      const minItems = 4
+      const maxItems = isMobile ? 20 : 25 // increased to fill more space
+      
+      const finalItems = Math.max(minItems, Math.min(maxItems, calculatedItems))
+      setItemsPerSlide(finalItems)
+      
+      console.log('Viewport calculation:', {
+        viewportHeight,
+        availableHeight,
+        estimatedRowHeight,
+        calculatedItems,
+        finalItems
+      })
+    }
+
+    // Initial calculation with a delay to ensure DOM is ready
+    const timeoutId = setTimeout(calculateItemsPerSlide, 100)
+    
+    const handleResize = () => {
+      setTimeout(calculateItemsPerSlide, 100)
+    }
+
+    window.addEventListener('resize', handleResize)
+    window.addEventListener('orientationchange', () => {
+      setTimeout(calculateItemsPerSlide, 300)
+    })
+
+    return () => {
+      clearTimeout(timeoutId)
+      window.removeEventListener('resize', handleResize)
+      window.removeEventListener('orientationchange', handleResize)
+    }
+  }, [isMobile, isTablet])
 
   const handleChipClick = (event, vehicle) => {
     setAnchorEl(event.currentTarget)
@@ -141,14 +194,13 @@ const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => 
 
   // Mobile/Tablet Swiper View
   if (isMobile || isTablet) {
-    const maxItemsPerSlide = isMobile ? 8 : 10
-    const slides = Math.ceil(filteredVehicles.length / maxItemsPerSlide)
+    const slides = Math.ceil(filteredVehicles.length / itemsPerSlide)
 
     const getVehicleSlides = () => {
       const slidesData = []
       for (let slide = 0; slide < slides; slide++) {
-        const startIndex = slide * maxItemsPerSlide
-        const endIndex = Math.min(startIndex + maxItemsPerSlide, filteredVehicles.length)
+        const startIndex = slide * itemsPerSlide
+        const endIndex = Math.min(startIndex + itemsPerSlide, filteredVehicles.length)
         slidesData.push(filteredVehicles.slice(startIndex, endIndex))
       }
       return slidesData
@@ -168,7 +220,13 @@ const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => 
 
     return (
       <>
-        <Box sx={{ width: '100%', height: '500px' }}>
+        <Box 
+          ref={containerRef}
+          sx={{ 
+            width: '100%', 
+            minHeight: '800px' 
+          }}
+        >
           <Swiper
             modules={[Pagination]}
             spaceBetween={0}
@@ -190,9 +248,9 @@ const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => 
                 <TableContainer 
                   component={Paper}
                   sx={{ 
-                    height: '100%',
+                    height: '100% ', // Account for pagination
                     width: '100%',
-                    overflow: 'auto'
+    
                   }}
                 >
                   <Table 
@@ -200,9 +258,10 @@ const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => 
                     size="small"
                     sx={{
                       '& .MuiTableCell-root': {
-                        padding: isMobile ? '4px 2px' : '6px 4px',
+                        padding: isMobile ? '3px 2px' : '5px 4px',
                         fontSize: isMobile ? '0.65rem' : '0.75rem',
-                        lineHeight: 1.2
+                        lineHeight: 1.1,
+                        height: isMobile ? '28px' : '36px' // Match our calculation
                       }
                     }}
                   >
@@ -212,7 +271,7 @@ const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => 
                         
                         </TableCell>
                         <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5', minWidth: '40px' }}>
-                          <Box textAlign="center">
+                          <Box textAlign="left">
                             <Typography variant="caption" fontWeight="bold" display="block">
                               QUEUE
                             </Typography>
@@ -263,7 +322,7 @@ const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => 
                     </TableHead>
                     <TableBody>
                       {slideVehicles.map((vehicle, index) => {
-                        const globalIndex = slideIndex * maxItemsPerSlide + index
+                        const globalIndex = slideIndex * itemsPerSlide + index
                         const isOwn = isOwnVehicle(vehicle)
                         
                         return (
@@ -279,7 +338,7 @@ const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => 
                           >
                             <TableCell align="center">
                               <Typography variant="caption" fontWeight="bold">
-                                {globalIndex + 1}
+                                {vehicle.rank ||globalIndex + 1}
                               </Typography>
                             </TableCell>
                             <TableCell>
@@ -323,9 +382,11 @@ const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => 
                         )
                       })}
                       
-                      {/* Fill empty rows to maintain consistent table height */}
-                      {Array.from({ length: maxItemsPerSlide - slideVehicles.length }).map((_, index) => (
-                        <TableRow key={`empty-${index}`} sx={{ opacity: 0.3 }}>
+                      {/* Only fill empty rows if we want consistent height, otherwise let it be dynamic */}
+                      {slideVehicles.length < itemsPerSlide && Array.from({ 
+                        length: Math.min(3, itemsPerSlide - slideVehicles.length) 
+                      }).map((_, index) => (
+                        <TableRow key={`empty-${index}`} sx={{ opacity: 0.1 }}>
                           <TableCell>&nbsp;</TableCell>
                           <TableCell>&nbsp;</TableCell>
                           <TableCell>&nbsp;</TableCell>
@@ -342,6 +403,11 @@ const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => 
           </Swiper>
         </Box>
         
+        {/* Debug info - remove in production */}
+        {/* <Box sx={{ mt: 1, fontSize: '0.7rem', color: 'gray' }}>
+          Items per slide: {itemsPerSlide} | Total slides: {slides}
+        </Box> */}
+        
         <Popover
           open={Boolean(anchorEl)}
           anchorEl={anchorEl}
@@ -357,7 +423,7 @@ const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => 
     )
   }
 
-  // Desktop Table View
+  // Desktop Table View (unchanged)
   const getRowStyle = (vehicle, index) => {
     const isOwn = isOwnVehicle(vehicle)
     
@@ -387,6 +453,9 @@ const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => 
         <Table stickyHeader size="medium">
           <TableHead>
             <TableRow>
+               <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }} width={'10px'}>
+             
+              </TableCell>
               <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>
                 QUEUE
               </TableCell>
@@ -414,10 +483,13 @@ const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => 
                 sx={getRowStyle(vehicle, index)}
               >
                 <TableCell>
-                  <Box display="flex" alignItems="center" gap={1}>
-                    <Typography variant="body2" fontWeight="inherit">
-                      {index + 1}
+            <Typography variant="body2" fontWeight="inherit">
+                      {vehicle.rank ||index + 1}
                     </Typography>
+                </TableCell>
+                <TableCell>
+
+
                     <Chip
                       label={vehicle.item || vehicle.vehicle_number || `Vehicle ${index + 1}`}
                       onClick={(e) => handleChipClick(e, vehicle)}
@@ -428,7 +500,7 @@ const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => 
                         cursor: 'pointer'
                       }}
                     />
-                  </Box>
+                  
                 </TableCell>
                 <TableCell>
                   <Typography variant="body2" fontWeight="inherit">
