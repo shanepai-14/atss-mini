@@ -87,7 +87,7 @@ const Dashboard = () => {
           boxShadow: '0px 2px 4px -1px rgba(0,0,0,0.2), 0px 4px 5px 0px rgba(0,0,0,0.14), 0px 1px 10px 0px rgba(0,0,0,0.12)'
         }}
       >
-        <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', py:2 }}>
+        <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
           <PlantSelector 
             selectedPlant={selectedPlant}
             onPlantChange={handlePlantChange}
@@ -119,23 +119,6 @@ const Dashboard = () => {
 
       <Container maxWidth="xxl" sx={{ py: 2 }}>
      
-
-
-        {/* Error Alert */}
-        {error && (
-          <Alert 
-            severity="error" 
-            sx={{ mb: 2 }}
-            action={
-              <Button color="inherit" size="small" onClick={retry}>
-                Retry
-              </Button>
-            }
-          >
-            {error}
-          </Alert>
-        )}
-
         {/* Driver's Vehicle Alert */}
         {currentDriverVehicle && (
           <Alert severity="info" sx={{ mb: 2 }}>
@@ -162,8 +145,7 @@ const Dashboard = () => {
         {/* Footer info */}
         <Box sx={{ mt: 2, textAlign: 'center' }}>
           <Typography variant="caption" color="textSecondary">
-            {/* Queue updates automatically every 30 seconds • */}
-             Real-time updates via WebSocket
+            Queue updates automatically every 30 seconds • Real-time updates via WebSocket
           </Typography>
         </Box>
       </Container>
@@ -171,5 +153,6 @@ const Dashboard = () => {
   )
 }
 
+   
 
 export default Dashboard
