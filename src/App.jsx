@@ -1,35 +1,67 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React, { useEffect, useState } from 'react'
+import { Container, Box, Typography, CircularProgress, Alert } from '@mui/material'
+import Dashboard from './pages/Dashboard'
+import { authenticateUser } from './api/auth'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [authError, setAuthError] = useState(null)
+  const [loading, setLoading] = useState(true)
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        // Check if token exists in localStorage
+        const existingToken = localStorage.getItem('atss_token')
+        if (existingToken) {
+          setIsAuthenticated(true)
+          setLoading(false)
+          return
+        }
+
+        // Authenticate silently on first load
+        await authenticateUser()
+        setIsAuthenticated(true)
+      } catch (error) {
+        console.error('Authentication failed:', error)
+        setAuthError(error.message)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    initAuth()
+  }, [])
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+        <CircularProgress />
+      </Box>
+    )
+  }
+
+  if (authError) {
+    return (
+      <Container maxWidth="sm" sx={{ mt: 4 }}>
+        <Alert severity="error">
+          Authentication failed: {authError}
+        </Alert>
+      </Container>
+    )
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <Container maxWidth="sm" sx={{ mt: 4 }}>
+        <Alert severity="warning">
+          Please wait while we authenticate...
+        </Alert>
+      </Container>
+    )
+  }
+
+  return <Dashboard />
 }
 
 export default App
