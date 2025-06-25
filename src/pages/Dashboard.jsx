@@ -118,27 +118,8 @@ const Dashboard = () => {
       </AppBar>
 
       <Container maxWidth="xxl" sx={{ py: 2 }}>
-        {/* Controls */}
-        {/* <Card sx={{ mb: 2 }}>
-          <CardContent>
-            <Box 
-              display="flex" 
-              flexDirection={isMobile ? 'column' : 'row'}
-              alignItems={isMobile ? 'stretch' : 'center'} 
-              gap={2}
-            >
-   
-              
-              <Box flexGrow={1} />
-              
-              {lastUpdate && (
-                <Typography variant="caption" color="textSecondary">
-                  Last updated: {lastUpdate.toLocaleTimeString()}
-                </Typography>
-              )}
-            </Box>
-          </CardContent>
-        </Card> */}
+     
+
 
         {/* Error Alert */}
         {error && (
@@ -190,6 +171,5 @@ const Dashboard = () => {
   )
 }
 
-      
 
 export default Dashboard
