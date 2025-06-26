@@ -477,7 +477,7 @@ const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => 
       <TableContainer 
         component={Paper} 
         sx={{ 
-          maxHeight: 'calc(100vh - 300px)',
+          maxHeight: 'calc(100vh - 150px)',
           '& .MuiTableCell-root': {
             whiteSpace: 'nowrap',
             fontSize: '0.875rem'
@@ -516,12 +516,12 @@ const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => 
                 key={vehicle.id || index}
                 sx={getRowStyle(vehicle, index)}
               >
-                <TableCell>
+                <TableCell sx={{py:0.5}}>
             <Typography variant="body2" fontWeight="inherit">
                       {vehicle.rank ||index + 1}
                     </Typography>
                 </TableCell>
-                <TableCell>
+                <TableCell sx={{py:0.5}}>
                             <Box
                                 onClick={(e) => handleChipClick(e, vehicle)}
                                 sx={{
@@ -547,7 +547,7 @@ const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => 
                     /> */}
                   
                 </TableCell>
-                <TableCell>
+                <TableCell sx={{py:0.5}}>
                   <Typography variant="body2" fontWeight="inherit">
                   {vehicle.message_data.length > 0 && (
                     <Box
@@ -569,7 +569,7 @@ const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => 
 
                   </Typography>
                 </TableCell>
-                <TableCell>
+                <TableCell sx={{py:0.5}}>
                      <Rating max={3} name="size-large" defaultValue={3} size="large" />
                 </TableCell>
                 {/* <TableCell>
