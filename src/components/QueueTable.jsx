@@ -369,18 +369,18 @@ const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => 
                                 sx={{
                                   ...getVehicleStyle(vehicle),
                                   display:"inline-block",
-                                  padding:'7px 15px 5px 15px',
+                                  padding:'5px 15px 3px 15px',
                                   borderRadius:'5px',
                                   fontWeight: 'bold',
-                                  fontSize: isMobile ? '0.8rem' : '0.10rem',
+                                  fontSize: isMobile ? '0.6rem' : '0.7rem',
                                   cursor: 'pointer',
-                                  height: isMobile ?'auto': 24,
+                                  height: isMobile ? 'auto': 24,
                                 
                                 }}
                               >{vehicle.item }</Box>
                             </TableCell>
                             <TableCell align="center">
-                          {vehicle.message_data.length > 0 && (
+                            {vehicle.message_data.length > 0 && (
                               <Box
                                 onClick={(e) => handleChipClick(e, vehicle)}
                                 sx={{
@@ -399,7 +399,7 @@ const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => 
                             </TableCell>
                             <TableCell align="center">
                            
-                               <Rating max={3} name="size-large" defaultValue={3} size="large" />
+                               <Rating max={3} name="size-small" defaultValue={3} size="small" />
                               
                             </TableCell>
                             {/* <TableCell align="center">
