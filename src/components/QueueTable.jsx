@@ -527,13 +527,11 @@ const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => 
                                 sx={{
                                   ...getVehicleStyle(vehicle),
                                   display:"inline-block",
-                                  padding:'7px 15px 5px 15px',
+                                  padding:'5px 15px 3px 15px',
                                   borderRadius:'5px',
                                   fontWeight: 'bold',
-                                  fontSize: '1rem',
+                                  fontSize: '6rem',
                                   cursor: 'pointer',
-                               
-                                
                                 }}
                               >{vehicle.item }</Box>
 
