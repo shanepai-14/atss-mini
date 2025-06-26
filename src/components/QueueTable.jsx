@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef} from 'react'
 import {
   Table,
   TableBody,
@@ -12,7 +12,8 @@ import {
   Typography,
   useTheme,
   useMediaQuery,
-  Popover
+  Popover,
+  Rating 
 } from '@mui/material'
 
 // Import Swiper React components
@@ -95,6 +96,22 @@ const TooltipContent = ({ vehicle }) => (
     <Typography variant="body2">
       Load Qty: {vehicle.feedback_qty || 0}/{vehicle?.load_capacity || 0}
     </Typography>
+    <Typography variant="body2">
+      Score : {vehicle.score || 0}
+    </Typography>
+    <Typography variant="body2">
+      Job Count : {vehicle.raw_score[3].value || 0}
+    </Typography>
+    <Typography variant="body2">
+      Mileage (KM) : {vehicle.raw_score[7].value || 0}
+    </Typography>
+    <Typography variant="body2">
+      Job Quantity : {vehicle.raw_score[4].value || 0}
+    </Typography>
+        <Typography variant="body2">
+      Job Hours : {vehicle.raw_score[8].value || 0}
+    </Typography>
+
     <Typography variant="body2" sx={{ mt: 1, mb: 1 }}>
       ---------------Factor Scores---------------
     </Typography>
@@ -188,8 +205,9 @@ const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => 
   )
 
   const isOwnVehicle = (vehicle) => {
-    return currentDriverVehicle && 
-      (vehicle.vehicle_number === currentDriverVehicle || vehicle.item === currentDriverVehicle)
+   
+    return currentDriverVehicle && vehicle.item == currentDriverVehicle;
+      
   }
 
   // Mobile/Tablet Swiper View
@@ -267,10 +285,10 @@ const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => 
                   >
                     <TableHead>
                       <TableRow>
-                        <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5', minWidth: '5px' }}>
+                        <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>
                         
                         </TableCell>
-                        <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5', minWidth: '40px' }}>
+                        <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>
                           <Box textAlign="left">
                             <Typography variant="caption" fontWeight="bold" display="block">
                               QUEUE
@@ -278,27 +296,31 @@ const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => 
                           </Box>
                         </TableCell>
 
-                        <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5', minWidth: '45px' }}>
+                        <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>
                           <Box textAlign="center">
-                            <Typography variant="caption" fontWeight="bold" display="block">
+                            {/* <Typography variant="caption" fontWeight="bold" display="block">
                               JOB
                             </Typography>
                             <Typography variant="caption" fontWeight="bold" display="block">
                               COUNT
-                            </Typography>
+                            </Typography> */}
+                              
                           </Box>
                         </TableCell>
-                        <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5', minWidth: '50px' }}>
+                        <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>
                           <Box textAlign="center">
                             <Typography variant="caption" fontWeight="bold" display="block">
-                              MILE
+                              LAST WEEK
                             </Typography>
                             <Typography variant="caption" fontWeight="bold" display="block">
-                              (KM)
+                              PERFORMANCE
+                            </Typography>
+                            <Typography variant="caption" fontWeight="bold" display="block">
+                              SCORE
                             </Typography>
                           </Box>
                         </TableCell>
-                        <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5', minWidth: '45px' }}>
+                        {/* <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5', minWidth: '45px' }}>
                           <Box textAlign="center">
                             <Typography variant="caption" fontWeight="bold" display="block">
                               JOB
@@ -317,7 +339,7 @@ const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => 
                               HRS
                             </Typography>
                           </Box>
-                        </TableCell>
+                        </TableCell> */}
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -338,37 +360,49 @@ const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => 
                           >
                             <TableCell align="center">
                               <Typography variant="caption" fontWeight="bold">
-                                {vehicle.rank ||globalIndex + 1}
+                                {vehicle.rank || globalIndex + 1}
                               </Typography>
                             </TableCell>
                             <TableCell>
-                              <Chip
-                                label={vehicle.item || vehicle.vehicle_number || `Vehicle ${globalIndex + 1}`}
+                              <Box
                                 onClick={(e) => handleChipClick(e, vehicle)}
                                 sx={{
                                   ...getVehicleStyle(vehicle),
+                                  display:"inline-block",
+                                  padding:'7px 15px 5px 15px',
+                                  borderRadius:'5px',
                                   fontWeight: 'bold',
-                                  fontSize: isMobile ? '0.6rem' : '0.7rem',
+                                  fontSize: isMobile ? '0.8rem' : '0.10rem',
                                   cursor: 'pointer',
-                                  height: isMobile ? 20 : 24,
-                                  maxWidth: '100%',
-                                  '& .MuiChip-label': {
-                                    px: isMobile ? 0.5 : 1
-                                  }
+                                  height: isMobile ?'auto': 24,
+                                
                                 }}
-                              />
+                              >{vehicle.item }</Box>
                             </TableCell>
                             <TableCell align="center">
-                              <Typography variant="caption">
-                                {vehicle.job_count || 0}
-                              </Typography>
+                          {vehicle.message_data.length > 0 && (
+                              <Box
+                                onClick={(e) => handleChipClick(e, vehicle)}
+                                sx={{
+                                  backgroundColor: theme.palette.error.main,
+                                  display: "inline-block",
+                                  padding: '8px 15px 6px 15px',
+                                  borderRadius: '5px',
+                                  fontSize: '0.7rem',
+                                  cursor: 'pointer',
+                                  color: 'white'
+                                }}
+                              >
+                                Trial mix
+                              </Box>
+                             )} 
                             </TableCell>
                             <TableCell align="center">
-                              <Typography variant="caption">
-                                {vehicle.mileage || '0'}
-                              </Typography>
+                           
+                               <Rating max={3} name="size-large" defaultValue={3} size="large" />
+                              
                             </TableCell>
-                            <TableCell align="center">
+                            {/* <TableCell align="center">
                               <Typography variant="caption">
                                 {vehicle.job_qty || 0}
                               </Typography>
@@ -377,7 +411,7 @@ const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => 
                               <Typography variant="caption">
                                 {vehicle.job_hours || '0'}
                               </Typography>
-                            </TableCell>
+                            </TableCell> */}
                           </TableRow>
                         )
                       })}
@@ -391,8 +425,8 @@ const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => 
                           <TableCell>&nbsp;</TableCell>
                           <TableCell>&nbsp;</TableCell>
                           <TableCell>&nbsp;</TableCell>
-                          <TableCell>&nbsp;</TableCell>
-                          <TableCell>&nbsp;</TableCell>
+                          {/* <TableCell>&nbsp;</TableCell>
+                          <TableCell>&nbsp;</TableCell> */}
                         </TableRow>
                       ))}
                     </TableBody>
@@ -460,12 +494,12 @@ const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => 
                 QUEUE
               </TableCell>
               <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>
-                SCORE
+               
               </TableCell>
               <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>
-                JOB COUNT
+                LAST WEEK PERFORMANCE SCORE
               </TableCell>
-              <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>
+              {/* <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>
                 MILEAGE (KM)
               </TableCell>
               <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>
@@ -473,7 +507,7 @@ const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => 
               </TableCell>
               <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>
                 JOB HOURS
-              </TableCell>
+              </TableCell> */}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -488,9 +522,22 @@ const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => 
                     </Typography>
                 </TableCell>
                 <TableCell>
+                            <Box
+                                onClick={(e) => handleChipClick(e, vehicle)}
+                                sx={{
+                                  ...getVehicleStyle(vehicle),
+                                  display:"inline-block",
+                                  padding:'7px 15px 5px 15px',
+                                  borderRadius:'5px',
+                                  fontWeight: 'bold',
+                                  fontSize: '1rem',
+                                  cursor: 'pointer',
+                               
+                                
+                                }}
+                              >{vehicle.item }</Box>
 
-
-                    <Chip
+                    {/* <Chip
                       label={vehicle.item || vehicle.vehicle_number || `Vehicle ${index + 1}`}
                       onClick={(e) => handleChipClick(e, vehicle)}
                       sx={{
@@ -499,18 +546,35 @@ const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => 
                         fontSize: '0.75rem',
                         cursor: 'pointer'
                       }}
-                    />
+                    /> */}
                   
                 </TableCell>
                 <TableCell>
                   <Typography variant="body2" fontWeight="inherit">
-                    {vehicle.score || 'N/A'}
+                  {vehicle.message_data.length > 0 && (
+                    <Box
+                      onClick={(e) => handleChipClick(e, vehicle)}
+                      sx={{
+                        backgroundColor: theme.palette.error.main,
+                        display: "inline-block",
+                        padding: '8px 15px 6px 15px',
+                        borderRadius: '5px',
+                        fontSize: '0.8rem',
+                        cursor: 'pointer',
+                        color: 'white'
+                      }}
+                    >
+                      Trial Mix
+                    </Box>
+                   )}
+
+
                   </Typography>
                 </TableCell>
                 <TableCell>
-                  {vehicle.job_count || 0}
+                     <Rating max={3} name="size-large" defaultValue={3} size="large" />
                 </TableCell>
-                <TableCell>
+                {/* <TableCell>
                   {vehicle.mileage || '0'}
                 </TableCell>
                 <TableCell>
@@ -518,7 +582,7 @@ const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => 
                 </TableCell>
                 <TableCell>
                   {vehicle.job_hours || '0'}
-                </TableCell>
+                </TableCell> */}
               </TableRow>
             ))}
             {filteredVehicles.length === 0 && (
