@@ -530,7 +530,7 @@ const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => 
                                   padding:'5px 15px 3px 15px',
                                   borderRadius:'5px',
                                   fontWeight: 'bold',
-                                  fontSize: '6rem',
+                                  fontSize: '1rem',
                                   cursor: 'pointer',
                                 }}
                               >{vehicle.item }</Box>
