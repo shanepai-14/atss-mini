@@ -386,9 +386,9 @@ const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => 
                                 sx={{
                                   backgroundColor: theme.palette.error.main,
                                   display: "inline-block",
-                                  padding: '8px 15px 6px 15px',
+                                  padding:'5px 15px 3px 15px',
                                   borderRadius: '5px',
-                                  fontSize: '0.7rem',
+                                  fontSize: '0.6rem',
                                   cursor: 'pointer',
                                   color: 'white'
                                 }}
