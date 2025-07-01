@@ -13,8 +13,17 @@ import {
   useTheme,
   useMediaQuery,
   Popover,
-  Rating 
+  Rating,
+  IconButton,
+  Tooltip,
+  ToggleButton,
+  ToggleButtonGroup
 } from '@mui/material'
+import {
+  ViewCarousel,
+  SwipeRight,
+  ArrowForward
+} from '@mui/icons-material'
 
 // Import Swiper React components
 import { Swiper, SwiperSlide } from 'swiper/react'
@@ -119,57 +128,105 @@ const TooltipContent = ({ vehicle }) => (
   </Box>
 )
 
-const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => {
+// Navigation Toggle Component
+const NavigationToggle = ({ navigationMode, setNavigationMode, isMobile, isTablet }) => {
+  if (!isMobile && !isTablet) return null // Only show on mobile/tablet
+
+  return (
+    <Box 
+      sx={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        mb: 1,
+        position: 'relative',
+        zIndex: 10
+      }}
+    >
+      <ToggleButtonGroup
+        value={navigationMode}
+        exclusive
+        onChange={(_, newMode) => newMode && setNavigationMode(newMode)}
+        size="small"
+        sx={{
+          '& .MuiToggleButton-root': {
+            px: isMobile ? 1 : 2,
+            py: 0.5,
+            fontSize: isMobile ? '0.7rem' : '0.8rem',
+          }
+        }}
+      >
+
+        <ToggleButton value="scroll">
+          <ArrowForward sx={{ mr: 0.5, fontSize: isMobile ? '1rem' : '1.2rem' }} />
+          Scroll
+        </ToggleButton>
+        <ToggleButton value="swiper">
+          <ViewCarousel sx={{ mr: 0.5, fontSize: isMobile ? '1rem' : '1.2rem' }} />
+          Pages
+        </ToggleButton>
+      </ToggleButtonGroup>
+    </Box>
+  )
+}
+
+const QueueTable = ({ 
+  vehicles, 
+  loading, 
+  currentDriverVehicle, 
+  searchTerm,
+  showPerformanceScore = false // Keep this prop for future use
+}) => {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
   const isTablet = useMediaQuery(theme.breakpoints.down('lg'))
   const [anchorEl, setAnchorEl] = useState(null)
   const [selectedVehicle, setSelectedVehicle] = useState(null)
-  const [itemsPerSlide, setItemsPerSlide] = useState(8) // default fallback
+  const [itemsPerSlide, setItemsPerSlide] = useState(8)
+  const [navigationMode, setNavigationMode] = useState('scroll') // 'swiper' or 'scroll'
+  const [scrollModeItemsPerTable, setScrollModeItemsPerTable] = useState(8) // For scroll mode
   const containerRef = useRef(null)
 
-  // Calculate items per slide based on viewport
+  // Calculate items per slide/table based on viewport (for both modes)
   useEffect(() => {
-    const calculateItemsPerSlide = () => {
-      // Use the actual available viewport height instead of container
+    const calculateItemsPerTable = () => {
       const viewportHeight = window.innerHeight
-      const headerHeight = 60 // Approximate header height
-      const paginationHeight = 40 // Approximate pagination height  
-      const otherUIElements = 200 // Navigation, margins, etc.
+      const headerHeight = 60
+      const paginationHeight = 40
+      const otherUIElements = 250 // Include toggle
       
       const availableHeight = viewportHeight - headerHeight - paginationHeight - otherUIElements
-      
-      // More accurate row height estimation based on actual CSS
-      const estimatedRowHeight = isMobile ? 28 : 36 // accounting for padding and line-height
-      
+      const estimatedRowHeight = isMobile ? 28 : 36
       const calculatedItems = Math.floor(availableHeight / estimatedRowHeight)
       
-      // Set minimum and maximum bounds
       const minItems = 4
-      const maxItems = isMobile ? 20 : 25 // increased to fill more space
-      
+      const maxItems = isMobile ? 20 : 25
       const finalItems = Math.max(minItems, Math.min(maxItems, calculatedItems))
-      setItemsPerSlide(finalItems)
       
+      if (navigationMode === 'swiper') {
+        setItemsPerSlide(finalItems)
+      } else {
+        setScrollModeItemsPerTable(finalItems)
+      }
+
       console.log('Viewport calculation:', {
         viewportHeight,
         availableHeight,
         estimatedRowHeight,
         calculatedItems,
-        finalItems
+        finalItems,
+        mode: navigationMode
       })
     }
 
-    // Initial calculation with a delay to ensure DOM is ready
-    const timeoutId = setTimeout(calculateItemsPerSlide, 100)
+    const timeoutId = setTimeout(calculateItemsPerTable, 100)
     
     const handleResize = () => {
-      setTimeout(calculateItemsPerSlide, 100)
+      setTimeout(calculateItemsPerTable, 100)
     }
 
     window.addEventListener('resize', handleResize)
     window.addEventListener('orientationchange', () => {
-      setTimeout(calculateItemsPerSlide, 300)
+      setTimeout(calculateItemsPerTable, 300)
     })
 
     return () => {
@@ -177,7 +234,7 @@ const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => 
       window.removeEventListener('resize', handleResize)
       window.removeEventListener('orientationchange', handleResize)
     }
-  }, [isMobile, isTablet])
+  }, [isMobile, isTablet, navigationMode]) // Added navigationMode as dependency
 
   const handleChipClick = (event, vehicle) => {
     setAnchorEl(event.currentTarget)
@@ -205,13 +262,260 @@ const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => 
   )
 
   const isOwnVehicle = (vehicle) => {
-   
     return currentDriverVehicle && vehicle.item == currentDriverVehicle;
-      
   }
 
-  // Mobile/Tablet Swiper View
+  // Mobile/Tablet Views
   if (isMobile || isTablet) {
+    if (filteredVehicles.length === 0) {
+      return (
+        <Box>
+          <NavigationToggle 
+            navigationMode={navigationMode}
+            setNavigationMode={setNavigationMode}
+            isMobile={isMobile}
+            isTablet={isTablet}
+          />
+          <Box display="flex" justifyContent="center" p={4}>
+            <Typography color="textSecondary">
+              {searchTerm ? 'No vehicles match your search' : 'No vehicles in queue'}
+            </Typography>
+          </Box>
+        </Box>
+      )
+    }
+
+    // Native Horizontal Scroll Version (Table-based like Swiper)
+    if (navigationMode === 'scroll') {
+      // Calculate items per table (same logic as Swiper)
+      const viewportHeight = window.innerHeight
+      const headerHeight = 60
+      const paginationHeight = 40
+      const otherUIElements = 250 // Include toggle
+      
+      const availableHeight = viewportHeight - headerHeight - paginationHeight - otherUIElements
+      const estimatedRowHeight = isMobile ? 28 : 36
+      const calculatedItems = Math.floor(availableHeight / estimatedRowHeight)
+      
+      const minItems = 4
+      const maxItems = isMobile ? 20 : 25
+      const finalItemsPerTable = Math.max(minItems, Math.min(maxItems, calculatedItems))
+
+      const tables = Math.ceil(filteredVehicles.length / finalItemsPerTable)
+
+      const getVehicleTables = () => {
+        const tablesData = []
+        for (let table = 0; table < tables; table++) {
+          const startIndex = table * finalItemsPerTable
+          const endIndex = Math.min(startIndex + finalItemsPerTable, filteredVehicles.length)
+          tablesData.push(filteredVehicles.slice(startIndex, endIndex))
+        }
+        return tablesData
+      }
+
+      const tablesData = getVehicleTables()
+
+      return (
+        <Box>
+          <NavigationToggle 
+            navigationMode={navigationMode}
+            setNavigationMode={setNavigationMode}
+            isMobile={isMobile}
+            isTablet={isTablet}
+          />
+          
+          <Box
+            sx={{ 
+              width: '100%',
+              height: `calc(100vh - 150px)`, // Fixed height to prevent vertical scroll
+              overflowY: 'hidden', // Prevent vertical scroll
+              overflowX: tables === 1 ? 'hidden' : 'auto', // No horizontal scroll if only 1 table
+              display: 'flex', // Horizontal layout
+              '&::-webkit-scrollbar': {
+                height: '8px',
+                display: tables === 1 ? 'none' : 'block', // Hide scrollbar if only 1 table
+              },
+              '&::-webkit-scrollbar-track': {
+                backgroundColor: '#f1f1f1',
+                borderRadius: '4px',
+              },
+              '&::-webkit-scrollbar-thumb': {
+                backgroundColor: '#c1c1c1',
+                borderRadius: '4px',
+                '&:hover': {
+                  backgroundColor: '#a8a8a8',
+                },
+              },
+            }}
+          >
+            {tablesData.map((tableVehicles, tableIndex) => (
+              <TableContainer 
+                key={tableIndex}
+                component={Paper}
+                sx={{ 
+                  height: '100%',
+                  minWidth: tables === 1 ? '100%' : '300px', // Full width if only 1 table
+                  maxWidth: tables === 1 ? '100%' : '300px', // Full width if only 1 table
+                  width: tables === 1 ? '100%' : '400px', // Explicit width for single table
+                  marginRight: tableIndex < tablesData.length - 1 ? '10px' : 0, // Gap between tables
+                  flexShrink: 0, // Prevent shrinking
+                  overflowY: 'hidden', // No vertical scroll within table
+                }}
+              >
+                <Table 
+                  stickyHeader 
+                  size="small"
+                  sx={{
+                    height: '100%',
+                    '& .MuiTableCell-root': {
+                     padding: isMobile ? '3px 2px' : '5px 4px',
+                      fontSize: '1rem' ,
+                      lineHeight: 1.2,
+                      whiteSpace: 'nowrap',
+                       height: isMobile ? '28px' : '36px'
+                    }
+                  }}
+                >
+                  <TableHead>
+                    <TableRow>
+                      <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>
+                        <Typography variant="caption" fontWeight="bold" display="block" >
+                          
+                        </Typography>
+                      </TableCell>
+                      <TableCell textAlign="left" sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5', minWidth: '15px' }}>
+                        <Typography variant="caption" fontWeight="bold" display="block">
+                          QUEUE
+                        </Typography>
+                      </TableCell>
+                      <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5', minWidth: '50px' }}>
+                        <Typography variant="caption" fontWeight="bold" display="block">
+                          REMARKS  
+                        </Typography>
+                      </TableCell>
+                      {/* Performance Score Column - Commented Out */}
+                      {/* {showPerformanceScore && (
+                        <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5', minWidth: '140px' }}>
+                          <Typography variant="caption" fontWeight="bold" display="block">
+                            LAST WEEK
+                          </Typography>
+                          <Typography variant="caption" fontWeight="bold" display="block">
+                            PERFORMANCE
+                          </Typography>
+                          <Typography variant="caption" fontWeight="bold" display="block">
+                            SCORE
+                          </Typography>
+                        </TableCell>
+                      )} */}
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {tableVehicles.map((vehicle, index) => {
+                      const globalIndex = tableIndex * finalItemsPerTable + index
+                      const isOwn = isOwnVehicle(vehicle)
+                      
+                      return (
+                        <TableRow
+                          key={vehicle.id || globalIndex}
+                          sx={{
+                            backgroundColor: isOwn ? '#e3f2fd' : index % 2 === 0 ? '#fafafa' : '#ffffff',
+                            border: isOwn ? '2px solid #1976d2' : 'none',
+                            '&:hover': {
+                              backgroundColor: isOwn ? '#bbdefb' : '#f5f5f5',
+                            },
+                          }}
+                        >
+                          <TableCell align="center">
+                            <Typography variant="caption" fontWeight="bold" sx={{fontSize:'1rem'}}>
+                              {vehicle.rank || globalIndex + 1}
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Box
+                              onClick={(e) => handleChipClick(e, vehicle)}
+                              sx={{
+                                ...getVehicleStyle(vehicle),
+                                display: "inline-block",
+                                padding: '4px 8px 2px 8px',
+                                borderRadius: '4px',
+                                fontWeight: 'bold',
+                                fontSize: '1rem' ,
+                                cursor: 'pointer',
+                                minWidth: '60px',
+                                textAlign: 'center',
+                                height: isMobile ? 'auto': 24,
+                                
+                              }}
+                            >
+                              {vehicle.item}
+                            </Box>
+                          </TableCell>
+                          <TableCell align="left">
+                        {vehicle.message_data.length > 0 && (
+                        vehicle.message_data.map((msg, index) => (
+                          <Box
+                            key={index}
+                            onClick={(e) => handleChipClick(e, vehicle)}
+                            sx={{
+                              backgroundColor: theme.palette.error.main,
+                              display: "inline-block",
+                              padding: '4px 8px 2px 8px',
+                              borderRadius: '4px',
+                              fontSize: '0.6rem',
+                              cursor: 'pointer',
+                              color: 'white',
+                              marginRight: '4px', // spacing between chips
+                            }}
+                          >
+                            {msg.message?.FeedbackType || 'No Feedback'}
+                          </Box>
+                        ))
+                      )}
+
+                          </TableCell>
+                          {/* Performance Score Column - Commented Out */}
+                          {/* {showPerformanceScore && (
+                            <TableCell align="center">
+                              <Rating max={3} name="size-small" defaultValue={3} size="small" />
+                            </TableCell>
+                          )} */}
+                        </TableRow>
+                      )
+                    })}
+                    
+                    {/* Fill empty rows to maintain consistent table height */}
+                    {tableVehicles.length < finalItemsPerTable && Array.from({ 
+                      length: finalItemsPerTable - tableVehicles.length 
+                    }).map((_, index) => (
+                      <TableRow key={`empty-${tableIndex}-${index}`} sx={{ opacity: 0.1 }}>
+                        <TableCell>&nbsp;</TableCell>
+                        <TableCell>&nbsp;</TableCell>
+                        <TableCell>&nbsp;</TableCell>
+                        {/* {showPerformanceScore && <TableCell>&nbsp;</TableCell>} */}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            ))}
+          </Box>
+          
+          <Popover
+            open={Boolean(anchorEl)}
+            anchorEl={anchorEl}
+            onClose={handlePopoverClose}
+            anchorOrigin={{
+              vertical: 'bottom',
+              horizontal: 'left',
+            }}
+          >
+            {selectedVehicle && <TooltipContent vehicle={selectedVehicle} />}
+          </Popover>
+        </Box>
+      )
+    }
+
+    // Swiper Version (Original)
     const slides = Math.ceil(filteredVehicles.length / itemsPerSlide)
 
     const getVehicleSlides = () => {
@@ -224,20 +528,17 @@ const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => 
       return slidesData
     }
 
-    if (filteredVehicles.length === 0) {
-      return (
-        <Box display="flex" justifyContent="center" p={4}>
-          <Typography color="textSecondary">
-            {searchTerm ? 'No vehicles match your search' : 'No vehicles in queue'}
-          </Typography>
-        </Box>
-      )
-    }
-
     const slidesData = getVehicleSlides()
 
     return (
-      <>
+      <Box>
+        <NavigationToggle 
+          navigationMode={navigationMode}
+          setNavigationMode={setNavigationMode}
+          isMobile={isMobile}
+          isTablet={isTablet}
+        />
+        
         <Box 
           ref={containerRef}
           sx={{ 
@@ -266,80 +567,67 @@ const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => 
                 <TableContainer 
                   component={Paper}
                   sx={{ 
-                    height: '100% ', // Account for pagination
+                    height: '100%',
                     width: '100%',
-    
                   }}
                 >
                   <Table 
                     stickyHeader 
                     size="small"
                     sx={{
+                      height: '100%',
                       '& .MuiTableCell-root': {
                         padding: isMobile ? '3px 2px' : '5px 4px',
                         fontSize: isMobile ? '0.65rem' : '0.75rem',
                         lineHeight: 1.1,
-                        height: isMobile ? '28px' : '36px' // Match our calculation
+                        height: isMobile ? '36px' : '36px'
                       }
                     }}
                   >
                     <TableHead>
                       <TableRow>
                         <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>
-                        
+                          <Typography variant="caption" fontWeight="bold" display="block" >
+                          
+                        </Typography>
                         </TableCell>
                         <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>
-                          <Box textAlign="left">
                             <Typography variant="caption" fontWeight="bold" display="block">
                               QUEUE
                             </Typography>
-                          </Box>
+
                         </TableCell>
 
-                        <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>
-                          <Box textAlign="center">
+                        <TableCell  sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>
+                          {/* <Box textAlign="center"> */}
                             {/* <Typography variant="caption" fontWeight="bold" display="block">
                               JOB
                             </Typography>
                             <Typography variant="caption" fontWeight="bold" display="block">
                               COUNT
                             </Typography> */}
-                              
-                          </Box>
+                            
+                          {/* </Box> */}
+                          <Typography variant="caption" fontWeight="bold" display="block">
+                          REMARKS  
+                        </Typography>
                         </TableCell>
-                        <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>
-                          <Box textAlign="center">
-                            <Typography variant="caption" fontWeight="bold" display="block">
-                              LAST WEEK
-                            </Typography>
-                            <Typography variant="caption" fontWeight="bold" display="block">
-                              PERFORMANCE
-                            </Typography>
-                            <Typography variant="caption" fontWeight="bold" display="block">
-                              SCORE
-                            </Typography>
-                          </Box>
-                        </TableCell>
-                        {/* <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5', minWidth: '45px' }}>
-                          <Box textAlign="center">
-                            <Typography variant="caption" fontWeight="bold" display="block">
-                              JOB
-                            </Typography>
-                            <Typography variant="caption" fontWeight="bold" display="block">
-                              QTY
-                            </Typography>
-                          </Box>
-                        </TableCell>
-                        <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5', minWidth: '50px' }}>
-                          <Box textAlign="center">
-                            <Typography variant="caption" fontWeight="bold" display="block">
-                              JOB
-                            </Typography>
-                            <Typography variant="caption" fontWeight="bold" display="block">
-                              HRS
-                            </Typography>
-                          </Box>
-                        </TableCell> */}
+                        {/* Performance Score Column - Commented Out */}
+                        {/* {showPerformanceScore && (
+                          <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>
+                            <Box textAlign="center">
+                              <Typography variant="caption" fontWeight="bold" display="block">
+                                LAST WEEK
+                              </Typography>
+                              <Typography variant="caption" fontWeight="bold" display="block">
+                                PERFORMANCE
+                              </Typography>
+                              <Typography variant="caption" fontWeight="bold" display="block">
+                                SCORE
+                              </Typography>
+                            </Box>
+                          </TableCell>
+                        )} */}
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -359,7 +647,7 @@ const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => 
                             }}
                           >
                             <TableCell align="center">
-                              <Typography variant="caption" fontWeight="bold">
+                              <Typography variant="caption" fontWeight="bold" sx={{fontSize: '1rem',}}>
                                 {vehicle.rank || globalIndex + 1}
                               </Typography>
                             </TableCell>
@@ -372,51 +660,47 @@ const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => 
                                   padding:'5px 15px 3px 15px',
                                   borderRadius:'5px',
                                   fontWeight: 'bold',
-                                  fontSize: isMobile ? '0.6rem' : '0.7rem',
+                                  fontSize: '1rem',
                                   cursor: 'pointer',
                                   height: isMobile ? 'auto': 24,
                                 
                                 }}
                               >{vehicle.item }</Box>
                             </TableCell>
-                            <TableCell align="center">
-                            {vehicle.message_data.length > 0 && (
-                              <Box
-                                onClick={(e) => handleChipClick(e, vehicle)}
-                                sx={{
-                                  backgroundColor: theme.palette.error.main,
-                                  display: "inline-block",
-                                  padding:'5px 15px 3px 15px',
-                                  borderRadius: '5px',
-                                  fontSize: '0.6rem',
-                                  cursor: 'pointer',
-                                  color: 'white'
-                                }}
-                              >
-                                Trial mix
-                              </Box>
-                             )} 
+                            <TableCell align="left">
+                                {vehicle.message_data.length > 0 && (
+                                  vehicle.message_data.map((msg, index) => (
+                                    <Box
+                                      key={index}
+                                      onClick={(e) => handleChipClick(e, vehicle)}
+                                      sx={{
+                                        backgroundColor: theme.palette.error.main,
+                                        display: "inline-block",
+                                        padding: '4px 8px 2px 8px',
+                                        borderRadius: '4px',
+                                        fontSize: '0.6rem',
+                                        cursor: 'pointer',
+                                        color: 'white',
+                                        marginRight: '4px', // spacing between chips
+                                      }}
+                                    >
+                                      {msg.message?.FeedbackType || 'No Feedback'}
+                                    </Box>
+                                  ))
+                                )}
+
                             </TableCell>
-                            <TableCell align="center">
-                           
-                               <Rating max={3} name="size-small" defaultValue={3} size="small" />
-                              
-                            </TableCell>
-                            {/* <TableCell align="center">
-                              <Typography variant="caption">
-                                {vehicle.job_qty || 0}
-                              </Typography>
-                            </TableCell>
-                            <TableCell align="center">
-                              <Typography variant="caption">
-                                {vehicle.job_hours || '0'}
-                              </Typography>
-                            </TableCell> */}
+                            {/* Performance Score Column - Commented Out */}
+                            {/* {showPerformanceScore && (
+                              <TableCell align="center">
+                                <Rating max={3} name="size-small" defaultValue={3} size="small" />
+                              </TableCell>
+                            )} */}
                           </TableRow>
                         )
                       })}
                       
-                      {/* Only fill empty rows if we want consistent height, otherwise let it be dynamic */}
+                      {/* Fill empty rows */}
                       {slideVehicles.length < itemsPerSlide && Array.from({ 
                         length: Math.min(3, itemsPerSlide - slideVehicles.length) 
                       }).map((_, index) => (
@@ -424,9 +708,7 @@ const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => 
                           <TableCell>&nbsp;</TableCell>
                           <TableCell>&nbsp;</TableCell>
                           <TableCell>&nbsp;</TableCell>
-                          <TableCell>&nbsp;</TableCell>
-                          {/* <TableCell>&nbsp;</TableCell>
-                          <TableCell>&nbsp;</TableCell> */}
+                          {/* {showPerformanceScore && <TableCell>&nbsp;</TableCell>} */}
                         </TableRow>
                       ))}
                     </TableBody>
@@ -436,11 +718,6 @@ const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => 
             ))}
           </Swiper>
         </Box>
-        
-        {/* Debug info - remove in production */}
-        {/* <Box sx={{ mt: 1, fontSize: '0.7rem', color: 'gray' }}>
-          Items per slide: {itemsPerSlide} | Total slides: {slides}
-        </Box> */}
         
         <Popover
           open={Boolean(anchorEl)}
@@ -453,11 +730,11 @@ const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => 
         >
           {selectedVehicle && <TooltipContent vehicle={selectedVehicle} />}
         </Popover>
-      </>
+      </Box>
     )
   }
 
-  // Desktop Table View (unchanged)
+  // Desktop Table View (unchanged from original)
   const getRowStyle = (vehicle, index) => {
     const isOwn = isOwnVehicle(vehicle)
     
@@ -494,20 +771,14 @@ const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => 
                 QUEUE
               </TableCell>
               <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>
-               
+               REMARKS
               </TableCell>
-              <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>
-                LAST WEEK PERFORMANCE SCORE
-              </TableCell>
-              {/* <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>
-                MILEAGE (KM)
-              </TableCell>
-              <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>
-                JOB QTY
-              </TableCell>
-              <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>
-                JOB HOURS
-              </TableCell> */}
+              {/* Performance Score Column - Commented Out */}
+              {/* {showPerformanceScore && (
+                <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>
+                  LAST WEEK PERFORMANCE SCORE
+                </TableCell>
+              )} */}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -534,58 +805,42 @@ const QueueTable = ({ vehicles, loading, currentDriverVehicle, searchTerm }) => 
                                   cursor: 'pointer',
                                 }}
                               >{vehicle.item }</Box>
-
-                    {/* <Chip
-                      label={vehicle.item || vehicle.vehicle_number || `Vehicle ${index + 1}`}
-                      onClick={(e) => handleChipClick(e, vehicle)}
-                      sx={{
-                        ...getVehicleStyle(vehicle),
-                        fontWeight: 'bold',
-                        fontSize: '0.75rem',
-                        cursor: 'pointer'
-                      }}
-                    /> */}
-                  
                 </TableCell>
-                <TableCell sx={{py:0.5}}>
-                  <Typography variant="body2" fontWeight="inherit">
-                  {vehicle.message_data.length > 0 && (
-                    <Box
-                      onClick={(e) => handleChipClick(e, vehicle)}
-                      sx={{
-                        backgroundColor: theme.palette.error.main,
-                        display: "inline-block",
-                        padding: '8px 15px 6px 15px',
-                        borderRadius: '5px',
-                        fontSize: '0.8rem',
-                        cursor: 'pointer',
-                        color: 'white'
-                      }}
-                    >
-                      Trial Mix
-                    </Box>
-                   )}
+                <TableCell sx={{py:0.5}} textAlign={'left'}>
+ 
+                {vehicle.message_data.length > 0 && (
+                    vehicle.message_data.map((msg, index) => (
+                      <Box
+                        key={index}
+                        onClick={(e) => handleChipClick(e, vehicle)}
+                        sx={{
+                          backgroundColor: theme.palette.error.main,
+                          display: "inline-block",
+                          padding: '4px 8px 2px 8px',
+                          borderRadius: '4px',
+                          fontSize: '0.8rem',
+                          cursor: 'pointer',
+                          color: 'white',
+                          marginRight: '4px', // spacing between chips
+                        }}
+                      >
+                        {msg.message?.FeedbackType || 'No Feedback'}
+                      </Box>
+                    ))
+                  )}
 
-
-                  </Typography>
                 </TableCell>
-                <TableCell sx={{py:0.5}}>
+                {/* Performance Score Column - Commented Out */}
+                {/* {showPerformanceScore && (
+                  <TableCell sx={{py:0.5}}>
                      <Rating max={3} name="size-large" defaultValue={3} size="large" />
-                </TableCell>
-                {/* <TableCell>
-                  {vehicle.mileage || '0'}
-                </TableCell>
-                <TableCell>
-                  {vehicle.job_qty || 0}
-                </TableCell>
-                <TableCell>
-                  {vehicle.job_hours || '0'}
-                </TableCell> */}
+                  </TableCell>
+                )} */}
               </TableRow>
             ))}
             {filteredVehicles.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                <TableCell colSpan={showPerformanceScore ? 4 : 3} align="center" sx={{ py: 4 }}>
                   <Typography color="textSecondary">
                     {searchTerm ? 'No vehicles match your search' : 'No vehicles in queue'}
                   </Typography>
