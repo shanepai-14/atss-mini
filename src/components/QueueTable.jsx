@@ -192,7 +192,7 @@ const QueueTable = ({
       const viewportHeight = window.innerHeight
       const headerHeight = 60
       const paginationHeight = 40
-      const otherUIElements = 250 // Include toggle
+      const otherUIElements = 288 // Include toggle
       
       const availableHeight = viewportHeight - headerHeight - paginationHeight - otherUIElements
       const estimatedRowHeight = isMobile ? 28 : 36
@@ -291,7 +291,8 @@ const QueueTable = ({
       const viewportHeight = window.innerHeight
       const headerHeight = 60
       const paginationHeight = 40
-      const otherUIElements = 250 // Include toggle
+      const otherUIElements = 288 // Include toggle
+      
       
       const availableHeight = viewportHeight - headerHeight - paginationHeight - otherUIElements
       const estimatedRowHeight = isMobile ? 28 : 36
