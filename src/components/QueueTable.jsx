@@ -328,7 +328,7 @@ const QueueTable = ({
           <Box
             sx={{ 
               width: '100%',
-              height: `calc(100vh - 150px)`, // Fixed height to prevent vertical scroll
+              height: `calc(100vh - 200px)`, // Fixed height to prevent vertical scroll
               overflowY: 'hidden', // Prevent vertical scroll
               overflowX: tables === 1 ? 'hidden' : 'auto', // No horizontal scroll if only 1 table
               display: 'flex', // Horizontal layout
@@ -755,7 +755,7 @@ const QueueTable = ({
       <TableContainer 
         component={Paper} 
         sx={{ 
-          maxHeight: 'calc(100vh - 150px)',
+          maxHeight: 'calc(100vh - 200px)',
           '& .MuiTableCell-root': {
             whiteSpace: 'nowrap',
             fontSize: '0.875rem'
