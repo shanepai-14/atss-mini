@@ -24,7 +24,7 @@ const PlantSelector = ({ selectedPlant, onPlantChange }) => {
         // Use the correct FindPlus API endpoint for zones/origins
         const response = await axiosFindPlusInstance.post('/Zone/origin')
         const plantsData = response.data || []
-        setPlants(plantsData)
+       setPlants([plantsData[6]])
         
         // Auto-select first plant if none selected
         if (plantsData.length > 0 && !selectedPlant) {

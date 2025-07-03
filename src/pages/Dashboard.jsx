@@ -14,6 +14,8 @@ import PlantSelector from '../components/PlantSelector'
 import QueueTable from '../components/QueueTable'
 import VehicleLegend from '../components/VehicleLegend'
 import { useVehicleQueue } from '../hooks/useVehicleQueue'
+import PWAInstallButton from '../components/PWAInstallButton';
+
 
 const Dashboard = () => {
   const theme = useTheme()
@@ -88,6 +90,9 @@ const Dashboard = () => {
             selectedPlant={selectedPlant}
             onPlantChange={handlePlantChange}
           />
+          <Box>
+          
+           <PWAInstallButton variant="button" />
           
           {/* Live indicator */}
           {isRecentUpdate && (
@@ -99,6 +104,8 @@ const Dashboard = () => {
               sx={{ mr: 1 }}
             />
           )}
+          </Box>
+           
           
           {/* Manual refresh button */}
           {/* <Button
@@ -138,6 +145,8 @@ const Dashboard = () => {
             />
 
 
+     
+
         {/* Footer info */}
         {/* <Box sx={{ mt: 2, textAlign: 'center' }}>
           <Typography variant="caption" color="textSecondary">
@@ -145,6 +154,13 @@ const Dashboard = () => {
           </Typography>
         </Box> */}
       </Container>
+
+           <PWAInstallButton 
+              variant="banner"
+              position="top-right"
+              autoPromptDelay={2000}
+            />
+
     </Box>
   )
 }

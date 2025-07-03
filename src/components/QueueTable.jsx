@@ -372,7 +372,7 @@ const QueueTable = ({
                           
                         </Typography>
                       </TableCell>
-                      <TableCell textAlign="left" sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5', minWidth: '15px' }}>
+                      <TableCell  sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5', minWidth: '15px' }}>
                         <Typography variant="caption" fontWeight="bold" display="block">
                           QUEUE
                         </Typography>

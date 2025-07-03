@@ -18,8 +18,8 @@ export default defineConfig({
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait',
-        scope: '/',
-        start_url: '/',
+        scope: '/atss-vehicle-queue/',
+        start_url: '/atss-vehicle-queue/',
         icons: [
           {
             src: 'android-launchericon-144-144.png',
