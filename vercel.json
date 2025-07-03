@@ -1,20 +1,5 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "rewrites": [
-    {
-      "source": "/atss-vehicle-queue/(.*)",
-      "destination": "/atss-vehicle-queue/$1"
-    }
-  ],
-  "headers": [
-    {
-      "source": "/atss-vehicle-queue/(.*)\\.js",
-      "headers": [{"key": "Content-Type", "value": "application/javascript"}]
-    },
-    {
-      "source": "/atss-vehicle-queue/manifest.webmanifest",
-      "headers": [{"key": "Content-Type", "value": "application/manifest+json"}]
-    }
-  ]
-}
+    "rewrites": [
+      { "source": "/(.*)", "destination": "/index.html" }
+    ]
+  }
