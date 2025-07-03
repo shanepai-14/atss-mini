@@ -5,22 +5,10 @@ import { VitePWA } from 'vite-plugin-pwa'
 // https://vite.dev/config/
 export default defineConfig({
   base: '/atss-vehicle-queue/',
-  
-    build: {
-    // Ensure proper asset handling for Vercel
-    assetsDir: 'assets',
-    rollupOptions: {
-      output: {
-        manualChunks: undefined,
-      },
-    },
-  },
   plugins: [
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-       base: '/atss-vehicle-queue/',
-      scope: '/atss-vehicle-queue/',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
         name: 'ATSS',
@@ -58,10 +46,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
-        navigateFallback: null,
-        modifyURLPrefix: {
-          'assets/': '/atss-vehicle-queue/assets/',
-        },
+        navigateFallback: null
       },
       devOptions: {
         enabled: false // Enable PWA in development
