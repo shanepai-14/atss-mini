@@ -76,7 +76,7 @@ const Dashboard = () => {
   }
 
   return (
-    <Box sx={{ flexGrow: 1, bgcolor: '#f5f5f5', height: '100vh' }}>
+    <Box sx={{ flexGrow: 1, bgcolor: '#f5f5f5', height: '100%' }}>
       {/* Header */}
       <AppBar 
         position="static" 

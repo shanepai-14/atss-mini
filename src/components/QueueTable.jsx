@@ -137,7 +137,7 @@ const NavigationToggle = ({ navigationMode, setNavigationMode, isMobile, isTable
       sx={{ 
         display: 'flex', 
         justifyContent: 'center', 
-        mb: 1,
+        mt: 1,
         position: 'relative',
         zIndex: 10
       }}
@@ -318,13 +318,6 @@ const QueueTable = ({
 
       return (
         <Box>
-          <NavigationToggle 
-            navigationMode={navigationMode}
-            setNavigationMode={setNavigationMode}
-            isMobile={isMobile}
-            isTablet={isTablet}
-          />
-          
           <Box
             sx={{ 
               width: '100%',
@@ -445,7 +438,6 @@ const QueueTable = ({
                                 minWidth: '60px',
                                 textAlign: 'center',
                                 height: isMobile ? 'auto': 24,
-                                
                               }}
                             >
                               {vehicle.item}
@@ -500,7 +492,12 @@ const QueueTable = ({
               </TableContainer>
             ))}
           </Box>
-          
+          <NavigationToggle 
+            navigationMode={navigationMode}
+            setNavigationMode={setNavigationMode}
+            isMobile={isMobile}
+            isTablet={isTablet}
+          />
           <Popover
             open={Boolean(anchorEl)}
             anchorEl={anchorEl}
@@ -533,18 +530,11 @@ const QueueTable = ({
 
     return (
       <Box>
-        <NavigationToggle 
-          navigationMode={navigationMode}
-          setNavigationMode={setNavigationMode}
-          isMobile={isMobile}
-          isTablet={isTablet}
-        />
-        
         <Box 
           ref={containerRef}
           sx={{ 
             width: '100%', 
-            minHeight: '800px' 
+            height: 'calc(100vh - 200px)',
           }}
         >
           <Swiper
@@ -570,20 +560,22 @@ const QueueTable = ({
                   sx={{ 
                     height: '100%',
                     width: '100%',
+                    flexShrink: 0,
                   }}
                 >
                   <Table 
                     stickyHeader 
                     size="small"
-                    sx={{
-                      height: '100%',
-                      '& .MuiTableCell-root': {
-                        padding: isMobile ? '3px 2px' : '5px 4px',
-                        fontSize: isMobile ? '0.65rem' : '0.75rem',
-                        lineHeight: 1.1,
-                        height: isMobile ? '36px' : '36px'
-                      }
-                    }}
+                     sx={{
+                    height: '100%',
+                    '& .MuiTableCell-root': {
+                     padding: isMobile ? '3px 2px' : '5px 4px',
+                      fontSize: '1rem' ,
+                      lineHeight: 1.2,
+                      whiteSpace: 'nowrap',
+                       height: isMobile ? '20px' : '36px'
+                    }
+                  }}
                   >
                     <TableHead>
                       <TableRow>
@@ -592,23 +584,13 @@ const QueueTable = ({
                           
                         </Typography>
                         </TableCell>
-                        <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>
+                        <TableCell sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5',  }}>
                             <Typography variant="caption" fontWeight="bold" display="block">
                               QUEUE
                             </Typography>
 
                         </TableCell>
-
-                        <TableCell  sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5' }}>
-                          {/* <Box textAlign="center"> */}
-                            {/* <Typography variant="caption" fontWeight="bold" display="block">
-                              JOB
-                            </Typography>
-                            <Typography variant="caption" fontWeight="bold" display="block">
-                              COUNT
-                            </Typography> */}
-                            
-                          {/* </Box> */}
+                        <TableCell  sx={{ fontWeight: 'bold', bgcolor: '#f5f5f5'  }}>
                           <Typography variant="caption" fontWeight="bold" display="block">
                           REMARKS  
                         </Typography>
@@ -658,15 +640,18 @@ const QueueTable = ({
                                 sx={{
                                   ...getVehicleStyle(vehicle),
                                   display:"inline-block",
-                                  padding:'5px 15px 3px 15px',
-                                  borderRadius:'5px',
+                                  padding: '4px 8px 2px 8px',
+                                  borderRadius:'4px',
                                   fontWeight: 'bold',
                                   fontSize: '1rem',
                                   cursor: 'pointer',
+                                  minWidth: '45px',
+                                  textAlign: 'center',
                                   height: isMobile ? 'auto': 24,
                                 
-                                }}
-                              >{vehicle.item }</Box>
+                                }}>
+                                {vehicle.item}
+                                </Box>
                             </TableCell>
                             <TableCell align="left">
                                 {vehicle.message_data.length > 0 && (
@@ -720,6 +705,13 @@ const QueueTable = ({
           </Swiper>
         </Box>
         
+        <NavigationToggle 
+          navigationMode={navigationMode}
+          setNavigationMode={setNavigationMode}
+          isMobile={isMobile}
+          isTablet={isTablet}
+        />
+
         <Popover
           open={Boolean(anchorEl)}
           anchorEl={anchorEl}
