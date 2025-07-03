@@ -7,21 +7,16 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Chip,
   Box,
   Typography,
   useTheme,
   useMediaQuery,
   Popover,
-  Rating,
-  IconButton,
-  Tooltip,
   ToggleButton,
   ToggleButtonGroup
 } from '@mui/material'
 import {
   ViewCarousel,
-  SwipeRight,
   ArrowForward
 } from '@mui/icons-material'
 
@@ -573,7 +568,7 @@ const QueueTable = ({
                       fontSize: '1rem' ,
                       lineHeight: 1.2,
                       whiteSpace: 'nowrap',
-                       height: isMobile ? '20px' : '36px'
+                      height: isMobile ? '20px' : '36px'
                     }
                   }}
                   >
@@ -617,7 +612,6 @@ const QueueTable = ({
                       {slideVehicles.map((vehicle, index) => {
                         const globalIndex = slideIndex * itemsPerSlide + index
                         const isOwn = isOwnVehicle(vehicle)
-                        
                         return (
                           <TableRow
                             key={vehicle.id || globalIndex}
@@ -629,12 +623,12 @@ const QueueTable = ({
                               },
                             }}
                           >
-                            <TableCell align="center">
+                            <TableCell align="center" >
                               <Typography variant="caption" fontWeight="bold" sx={{fontSize: '1rem',}}>
                                 {vehicle.rank || globalIndex + 1}
                               </Typography>
                             </TableCell>
-                            <TableCell>
+                            <TableCell >
                               <Box
                                 onClick={(e) => handleChipClick(e, vehicle)}
                                 sx={{
@@ -653,7 +647,7 @@ const QueueTable = ({
                                 {vehicle.item}
                                 </Box>
                             </TableCell>
-                            <TableCell align="left">
+                            <TableCell align="left" >
                                 {vehicle.message_data.length > 0 && (
                                   vehicle.message_data.map((msg, index) => (
                                     <Box
@@ -688,12 +682,12 @@ const QueueTable = ({
                       
                       {/* Fill empty rows */}
                       {slideVehicles.length < itemsPerSlide && Array.from({ 
-                        length: Math.min(3, itemsPerSlide - slideVehicles.length) 
+                        length:  itemsPerSlide - slideVehicles.length
                       }).map((_, index) => (
                         <TableRow key={`empty-${index}`} sx={{ opacity: 0.1 }}>
-                          <TableCell>&nbsp;</TableCell>
-                          <TableCell>&nbsp;</TableCell>
-                          <TableCell>&nbsp;</TableCell>
+                          <TableCell >&nbsp;</TableCell>
+                          <TableCell >&nbsp;</TableCell>
+                          <TableCell >&nbsp;</TableCell>
                           {/* {showPerformanceScore && <TableCell>&nbsp;</TableCell>} */}
                         </TableRow>
                       ))}
