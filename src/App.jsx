@@ -12,12 +12,12 @@ function App() {
     const initAuth = async () => {
       try {
         // Check if token exists in localStorage
-        const existingToken = localStorage.getItem('atss_token')
-        if (existingToken) {
-          setIsAuthenticated(true)
-          setLoading(false)
-          return
-        }
+        // const existingToken = localStorage.getItem('atss_token')
+        // if (existingToken) {
+        //   setIsAuthenticated(true)
+        //   setLoading(false)
+        //   return
+        // }
 
         // Authenticate silently on first load
         await authenticateUser()
