@@ -112,6 +112,74 @@ const getVehicleStyle = (vehicle) => {
   return { backgroundColor, ...borderStyle };
 }
 
+// Add this helper function at the top of your component, after the getVehicleStyle function
+
+const getFeedbackItems = (vehicle, theme) => {
+  const feedbackItems = [];
+  
+  // 1. Add Trial Mix if score > 0
+  const trialMix = vehicle.raw_score?.find(f => f.factor_id === 6);
+  if (trialMix && trialMix.score > 0) {
+    feedbackItems.push({
+      type: 'Trial Mix',
+      value: trialMix.score,
+      source: 'raw_score',
+      color: theme.palette.error.main
+    });
+  }
+  
+  // 2. Add cancelled data if exists
+  if (vehicle?.cancelled !== null) {
+    let cancelVehicle = null;
+    if (Array.isArray(vehicle.cancelled)) {
+      cancelVehicle = vehicle.cancelled;
+    } else {
+      try {
+        cancelVehicle = JSON.parse(vehicle.cancelled);
+      } catch (e) {
+        cancelVehicle = [];
+      }
+    }
+    
+    if (cancelVehicle.length > 0) {
+      feedbackItems.push({
+        type: 'Cancelled',
+        value: cancelVehicle[0],
+        source: 'cancelled',
+        color: theme.palette.error.main
+      });
+    }
+  }
+  
+  // 3. Add message_data items (existing logic)
+  vehicle.message_data?.forEach((msg, index) => {
+    feedbackItems.push({
+      type: msg.message?.FeedbackType || 'No Feedback',
+      value: msg.message?.Value,
+      message: msg.message,
+      source: 'message_data',
+      originalIndex: index,
+      color: theme.palette.error.main
+    });
+  });
+  
+  // 4. Add Vehicle Breakdown from raw_score ONLY if score === 0 and not already in message_data
+  const breakdown = vehicle.raw_score?.find(f => f.name === "Vehicle Breakdown");
+  if (breakdown && breakdown.score === 0) {
+    const existingBreakdown = feedbackItems.find(item => item.type === "Vehicle Breakdown");
+    if (!existingBreakdown) {
+      feedbackItems.push({
+        type: 'Vehicle Breakdown',
+        value: breakdown.score,
+        source: 'raw_score',
+        color: theme.palette.info.main // Different color to indicate this is a "0 score" breakdown
+      });
+    }
+  }
+  
+  return feedbackItems;
+};
+
 
 const parseDate = (date) => {
   if (!date) return 'N/A'
@@ -492,29 +560,30 @@ const QueueTable = ({
                               {vehicle.item}
                             </Box>
                           </TableCell>
-                          <TableCell align="left">
-                        {vehicle.message_data.length > 0 && (
-                        vehicle.message_data.map((msg, index) => (
-                          <Box
-                            key={index}
-                            onClick={(e) => handleChipClick(e, vehicle)}
-                            sx={{
-                              backgroundColor: theme.palette.error.main,
-                              display: "inline-block",
-                              padding: '4px 8px 2px 8px',
-                              borderRadius: '4px',
-                              fontSize: '0.6rem',
-                              cursor: 'pointer',
-                              color: 'white',
-                              marginRight: '4px', // spacing between chips
-                            }}
-                          >
-                            {msg.message?.FeedbackType || 'No Feedback'}
-                          </Box>
-                        ))
-                      )}
-
-                          </TableCell>
+                      <TableCell align="left">
+                        {(() => {
+                          const feedbackItems = getFeedbackItems(vehicle, theme);
+                          return feedbackItems.map((item, index) => (
+                            <Box
+                              key={`${item.source}-${item.originalIndex || index}`}
+                              onClick={(e) => handleChipClick(e, vehicle, item)}
+                              sx={{
+                                backgroundColor: item.color,
+                                display: "inline-block",
+                                padding: '4px 8px 2px 8px',
+                                borderRadius: '4px',
+                                fontSize: '0.6rem',
+                                cursor: 'pointer',
+                                color: 'white',
+                                marginRight: '4px',
+                                marginBottom: '2px',
+                              }}
+                            >
+                              {item.type}
+                            </Box>
+                          ));
+                        })()}
+                      </TableCell>
                           {/* Performance Score Column - Commented Out */}
                           {/* {showPerformanceScore && (
                             <TableCell align="center">
@@ -701,29 +770,30 @@ const QueueTable = ({
                                 {vehicle.item}
                                 </Box>
                             </TableCell>
-                            <TableCell align="left" >
-                                {vehicle.message_data.length > 0 && (
-                                  vehicle.message_data.map((msg, index) => (
-                                    <Box
-                                      key={index}
-                                      onClick={(e) => handleChipClick(e, vehicle)}
-                                      sx={{
-                                        backgroundColor: theme.palette.error.main,
-                                        display: "inline-block",
-                                        padding: '4px 8px 2px 8px',
-                                        borderRadius: '4px',
-                                        fontSize: '0.6rem',
-                                        cursor: 'pointer',
-                                        color: 'white',
-                                        marginRight: '4px', // spacing between chips
-                                      }}
-                                    >
-                                      {msg.message?.FeedbackType || 'No Feedback'}
-                                    </Box>
-                                  ))
-                                )}
-
-                            </TableCell>
+                          <TableCell align="left">
+                            {(() => {
+                              const feedbackItems = getFeedbackItems(vehicle, theme);
+                              return feedbackItems.map((item, index) => (
+                                <Box
+                                  key={`${item.source}-${item.originalIndex || index}`}
+                                  onClick={(e) => handleChipClick(e, vehicle, item)}
+                                  sx={{
+                                    backgroundColor: item.color,
+                                    display: "inline-block",
+                                    padding: '4px 8px 2px 8px',
+                                    borderRadius: '4px',
+                                    fontSize: '0.6rem',
+                                    cursor: 'pointer',
+                                    color: 'white',
+                                    marginRight: '4px',
+                                    marginBottom: '2px',
+                                  }}
+                                >
+                                  {item.type}
+                                </Box>
+                              ));
+                            })()}
+                          </TableCell>
                             {/* Performance Score Column - Commented Out */}
                             {/* {showPerformanceScore && (
                               <TableCell align="center">
@@ -847,30 +917,30 @@ const QueueTable = ({
                                 }}
                               >{vehicle.item }</Box>
                 </TableCell>
-                <TableCell sx={{py:0.5}} textAlign={'left'}>
- 
-                {vehicle.message_data.length > 0 && (
-                    vehicle.message_data.map((msg, index) => (
-                      <Box
-                        key={index}
-                        onClick={(e) => handleChipClick(e, vehicle)}
-                        sx={{
-                          backgroundColor: theme.palette.error.main,
-                          display: "inline-block",
-                          padding: '4px 8px 2px 8px',
-                          borderRadius: '4px',
-                          fontSize: '0.8rem',
-                          cursor: 'pointer',
-                          color: 'white',
-                          marginRight: '4px', // spacing between chips
-                        }}
-                      >
-                        {msg.message?.FeedbackType || 'No Feedback'}
-                      </Box>
-                    ))
-                  )}
-
-                </TableCell>
+                  <TableCell sx={{py:0.5}} textAlign={'left'}>
+                    {(() => {
+                      const feedbackItems = getFeedbackItems(vehicle, theme);
+                      return feedbackItems.map((item, index) => (
+                        <Box
+                          key={`${item.source}-${item.originalIndex || index}`}
+                          onClick={(e) => handleChipClick(e, vehicle, item)}
+                          sx={{
+                            backgroundColor: item.color,
+                            display: "inline-block",
+                            padding: '4px 8px 2px 8px',
+                            borderRadius: '4px',
+                            fontSize: '0.8rem',
+                            cursor: 'pointer',
+                            color: 'white',
+                            marginRight: '4px',
+                            marginBottom: '2px',
+                          }}
+                        >
+                          {item.type}
+                        </Box>
+                      ));
+                    })()}
+                  </TableCell>
                 {/* Performance Score Column - Commented Out */}
                 {/* {showPerformanceScore && (
                   <TableCell sx={{py:0.5}}>
