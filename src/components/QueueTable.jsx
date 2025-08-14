@@ -31,33 +31,87 @@ import 'swiper/css/pagination'
 const getVehicleStyle = (vehicle) => {
   let backgroundColor = '#808080'
   let borderStyle = {}
-  
-  if (vehicle.important) {
-    backgroundColor = '#C00000'
-  } else if (vehicle.raw_score[1].score == 0) {
-    backgroundColor = '#404040'
-  } else if (vehicle.score > 0 && vehicle.status !== "On-break") {
-    backgroundColor = '#3C7D21'
+
+  let data = vehicle; // assuming `vehicle` holds all relevant data structure including `cancelled`, `message_data`, etc.
+  data.important = false; // default
+  const breakdown = vehicle.raw_score.find(f => f.name === "Vehicle Breakdown");
+  // 1. Check Trial Mix score
+  const trialMix = vehicle.raw_score.find(f => f.factor_id === 6);
+  if (trialMix && trialMix.score > 0) {
+    data.important = true;
   }
-  
-  if (vehicle.priority && vehicle?.compensated) {
-    borderStyle = { 
-      border: '3px solid #FFC000',
-      color: '#FFC000'
+
+  // 2. Check Cancelled Data
+  if (data?.cancelled !== null) {
+    let cancelVehicle = null;
+    if (Array.isArray(data.cancelled)) {
+      cancelVehicle = data.cancelled;
+    } else {
+      try {
+        cancelVehicle = JSON.parse(data.cancelled);
+      } catch (e) {
+        cancelVehicle = [];
+      }
     }
-  } else if (vehicle.priority) {
-    borderStyle = { 
-      border: '3px solid #FFFF00',
-      color: '#FFFF00'
-    }
-  } else {
-    borderStyle = { 
-      color: 'white'
+
+    if (cancelVehicle.length > 0) {
+      data.important = true;
+      data.feedback_qty = cancelVehicle[0];
     }
   }
 
-  return { backgroundColor, ...borderStyle }
+  // 3. Check message_data
+  for (let message of data?.message_data ?? []) {
+    // if (message.feedback_type === "Vehicle Breakdown") {
+    //   if (message.message.JobID !== 0 && message.message.JobID !== null) {
+    //     data.important = true;
+    //   } else {
+    //     data.important = false;
+    //     data.status = message.message.Message;
+    //   }
+    //   data.feedback_qty = message?.message?.Value ?? 0;
+    //   break;
+    // }
+
+    if (
+      message.feedback_type === "Balance Concrete" ||
+      message.feedback_type === "Load Reject"
+    ) {
+      data.important = true;
+      data.feedback_qty = message?.message?.Value ?? 0;
+      break;
+    }
+  }
+
+  // 4. Background Color Logic
+  if (data.important) {
+    backgroundColor = '#C00000';
+  } else if (breakdown?.score === 0) {
+    backgroundColor = '#404040';
+  } else if (vehicle.score > 0 && vehicle.status !== "On-break") {
+    backgroundColor = '#3C7D21';
+  }
+
+  // 5. Border Style Logic
+  if (vehicle.priority && vehicle?.compensated) {
+    borderStyle = {
+      border: '3px solid #FFC000',
+      color: '#FFC000',
+    };
+  } else if (vehicle.priority) {
+    borderStyle = {
+      border: '3px solid #FFFF00',
+      color: '#FFFF00',
+    };
+  } else {
+    borderStyle = {
+      color: 'white',
+    };
+  }
+
+  return { backgroundColor, ...borderStyle };
 }
+
 
 const parseDate = (date) => {
   if (!date) return 'N/A'
