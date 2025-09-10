@@ -57,7 +57,7 @@ const VehicleQLabel = ({ label, boxColor, textColor, priority = false, isMobile 
   )
 }
 
-const VehicleLegend = ({ searchTerm, onSearchChange }) => {
+const VehicleLegend = ({ searchTerm, onSearchChange, settings }) => {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
 
@@ -70,30 +70,22 @@ const VehicleLegend = ({ searchTerm, onSearchChange }) => {
         spacing={2}
         sx={{ mb: 2 }}
       >
-        {/* Legend */}
-        <Stack 
-          direction="row" 
-          spacing={isMobile ? 1 : 2} 
-          useFlexGap 
-          flexWrap="wrap"
-          alignItems="center"
-        >
-          {vehicleQue.map(que => {
-            const key = que.label.replace(' ', '').trim()
-            return (
+        <Stack direction="row" spacing={isMobile ? 1 : 2} flexWrap="wrap" alignItems="center">
+          {vehicleQue
+            .filter(que => settings.legend?.[que.label] !== false)
+            .map(que => (
               <VehicleQLabel
-                key={key}
+                key={que.label}
                 label={que.label}
                 boxColor={que.backgroundColor}
                 textColor={theme.palette.text.primary}
                 priority={que.priority}
                 isMobile={isMobile}
               />
-            )
-          })}
+            ))
+          }
         </Stack>
 
-        {/* Search */}
         <TextField
           size="small"
           placeholder="Search vehicles..."
@@ -102,12 +94,7 @@ const VehicleLegend = ({ searchTerm, onSearchChange }) => {
           InputProps={{
             startAdornment: <SearchIcon sx={{ color: 'text.secondary', mr: 1 }} />,
           }}
-          sx={{ 
-            minWidth: isMobile ? '100%' : 200,
-            '& .MuiOutlinedInput-root': {
-              height: 36
-            }
-          }}
+          sx={{ minWidth: isMobile ? '100%' : 200 }}
         />
       </Stack>
     </Box>

@@ -1,3 +1,4 @@
+// src/pages/Dashboard.jsx
 import React, { useState, useEffect, useRef } from 'react'
 import {
   Container,
@@ -7,22 +8,39 @@ import {
   Alert,
   Chip,
   useTheme,
-  useMediaQuery
+  useMediaQuery,
+  IconButton,
+  Tooltip,
+  Typography,
+  Button
 } from '@mui/material'
-import { Refresh as RefreshIcon, Wifi as WifiIcon } from '@mui/icons-material'
+import { 
+  Refresh as RefreshIcon, 
+  Wifi as WifiIcon,
+  Settings as SettingsIcon,
+  Logout as LogoutIcon,
+  Business as BusinessIcon
+} from '@mui/icons-material'
 import PlantSelector from '../components/PlantSelector'
 import QueueTable from '../components/QueueTable'
 import VehicleLegend from '../components/VehicleLegend'
+import SettingsPanel from '../components/SettingsPanel'
 import { useVehicleQueue } from '../hooks/useVehicleQueue'
+import { settingsManager } from '../utils/settingsManager'
+import { logout, getAuthData } from '../api/auth'
+import { useNavigate } from 'react-router-dom'
 import PWAInstallButton from '../components/PWAInstallButton';
-
 
 const Dashboard = () => {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+  const navigate = useNavigate()
   const [selectedPlant, setSelectedPlant] = useState(null)
   const [currentDriverVehicle, setCurrentDriverVehicle] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
+  const [settings, setSettings] = useState({})
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [userInfo, setUserInfo] = useState(null)
   const autoRefreshIntervalRef = useRef(null)
   
   const { 
@@ -34,23 +52,36 @@ const Dashboard = () => {
     refresh 
   } = useVehicleQueue(selectedPlant)
 
-  // Get driver's vehicle number from stored account data (only once)
+  // Load user info and settings on mount
   useEffect(() => {
-    const account = JSON.parse(localStorage.getItem('atss_account') || '{}')
-    // This would typically come from driver profile or be set via login
-    setCurrentDriverVehicle(account.vehicle_number || null)
+    const authData = getAuthData()
+    if (authData) {
+      setUserInfo(authData.userInfo)
+      setCurrentDriverVehicle(authData.userInfo?.vehicle_number || null)
+    }
+    
+    // Load initial settings
+    const initialSettings = settingsManager.getSettings()
+    setSettings(initialSettings)
   }, [])
+
+  // Initialize factor scores when vehicles load
+  useEffect(() => {
+    if (vehicles && vehicles.length > 0) {
+      settingsManager.initializeFactorScores(vehicles)
+      const updatedSettings = settingsManager.getSettings()
+      setSettings(updatedSettings)
+    }
+  }, [vehicles])
 
   // Auto-refresh every 30 seconds - only start when we have a plant selected
   useEffect(() => {
     if (!selectedPlant?.ZoneID && !selectedPlant?.ID) return
 
-    // Clear existing interval
     if (autoRefreshIntervalRef.current) {
       clearInterval(autoRefreshIntervalRef.current)
     }
 
-    // Set up new interval
     autoRefreshIntervalRef.current = setInterval(() => {
       refresh()
     }, 30000)
@@ -63,7 +94,7 @@ const Dashboard = () => {
   }, [selectedPlant?.ZoneID, selectedPlant?.ID, refresh])
 
   const isRecentUpdate = lastUpdate && 
-    (Date.now() - lastUpdate.getTime()) < 60000 // Within last minute
+    (Date.now() - lastUpdate.getTime()) < 60000
 
   const handlePlantChange = (plant) => {
     setSelectedPlant(plant)
@@ -72,6 +103,19 @@ const Dashboard = () => {
   const handleSearchChange = (value) => {
     setSearchTerm(value)
   }
+
+  const handleSettingsChange = (newSettings) => {
+    setSettings(newSettings)
+  }
+
+  const handleLogout = () => {
+    logout()
+    navigate('/vehicle-queue')
+  }
+
+  const authData = getAuthData()
+  const serviceCode = authData?.ServiceCode
+  const admin = authData?.userInfo.Username == 'shane';
 
   return (
     <Box sx={{ flexGrow: 1, bgcolor: '#f5f5f5', height: '100%' }}>
@@ -89,82 +133,137 @@ const Dashboard = () => {
           <PlantSelector 
             selectedPlant={selectedPlant}
             onPlantChange={handlePlantChange}
+            serviceCode={serviceCode}
           />
-          <Box>
+          
           
            <PWAInstallButton variant="button" />
           
-          {/* Live indicator */}
-          {isRecentUpdate && (
-            <Chip 
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {/* Connection Status */}
+            <Chip
               icon={<WifiIcon />}
-              label="LIVE"
-              color="success"
+              label={isRecentUpdate ? 'Connected' : 'Connecting...'}
+              color={isRecentUpdate ? 'success' : 'warning'}
               size="small"
-              sx={{ mr: 1 }}
+              variant="outlined"
+              sx={{ 
+                color: 'white', 
+                borderColor: 'white',
+                '& .MuiChip-icon': { color: 'white' }
+              }}
             />
+            
+            {/* Manual Refresh */}
+            {/* <Tooltip title="Refresh Data">
+              <IconButton onClick={refresh} color="inherit" disabled={loading}>
+                <RefreshIcon />
+              </IconButton>
+            </Tooltip> */}
+            
+            {/* Settings */}
+        
+
+          {admin && (
+            <Tooltip title="Display Settings">
+              <IconButton onClick={() => setSettingsOpen(true)} color="inherit">
+                <SettingsIcon />
+              </IconButton>
+            </Tooltip>
           )}
-          </Box>
            
-          
-          {/* Manual refresh button */}
-          {/* <Button
-            color="inherit"
-            onClick={refresh}
-            disabled={loading}
-            startIcon={<RefreshIcon />}
-            size={isMobile ? 'small' : 'medium'}
-          >
-            {isMobile ? '' : 'Refresh'}
-          </Button> */}
+            
+            {/* Logout */}
+            <Tooltip title="Logout">
+              <IconButton onClick={handleLogout} color="inherit">
+                <LogoutIcon />
+              </IconButton>
+            </Tooltip>
+          </Box>
         </Toolbar>
       </AppBar>
 
-      <Container maxWidth="xxl" sx={{ py: 2 }}>
-     
-        {/* Driver's Vehicle Alert */}
-        {currentDriverVehicle && (
-          <Alert severity="info" sx={{ mb: 2 }}>
-            Your vehicle ({currentDriverVehicle}) is highlighted in the queue below.
+      <Container maxWidth="xl" sx={{ py: 3 }}>
+        {/* Plant Selector */}
+        {/* <Box sx={{ mb: 3 }}>
+          <PlantSelector 
+            selectedPlant={selectedPlant}
+            onPlantChange={handlePlantChange}
+          />
+        </Box> */}
+
+        {/* Error Display */}
+        {error && (
+          <Alert 
+            severity="error" 
+            sx={{ mb: 3 }} 
+            action={
+              <Button color="inherit" size="small" onClick={retry}>
+                Retry
+              </Button>
+            }
+          >
+            {error}
           </Alert>
         )}
 
-        {/* Legend and Search */}
-        <VehicleLegend 
-          searchTerm={searchTerm}
-          onSearchChange={handleSearchChange}
-        />
+        {/* Vehicle Legend */}
+        {selectedPlant && (
+          <VehicleLegend 
+            searchTerm={searchTerm}
+            onSearchChange={handleSearchChange}
+            settings={settings}
+          />
+        )}
 
         {/* Queue Table */}
+        {selectedPlant && (
+          <QueueTable
+            vehicles={vehicles}
+            loading={loading}
+            searchTerm={searchTerm}
+            currentDriverVehicle={currentDriverVehicle}
+            settings={settings}
+            serviceCode={serviceCode}
+          />
+        )}
 
-            <QueueTable 
-              vehicles={vehicles}
-              loading={loading}
-              currentDriverVehicle={currentDriverVehicle}
-              searchTerm={searchTerm}
-            />
-
-
-     
-
-        {/* Footer info */}
-        {/* <Box sx={{ mt: 2, textAlign: 'center' }}>
-          <Typography variant="caption" color="textSecondary">
-            Queue updates automatically every 30 seconds • Real-time updates via WebSocket
-          </Typography>
-        </Box> */}
+        {/* Welcome Message when no plant selected */}
+        {!selectedPlant && !loading && (
+          <Box 
+            sx={{ 
+              textAlign: 'center', 
+              py: 8,
+              color: 'text.secondary'
+            }}
+          >
+            <BusinessIcon sx={{ fontSize: 64, mb: 2, opacity: 0.5 }} />
+            <Typography variant="h5" gutterBottom>
+              Welcome to Vehicle Queue For Drivers
+            </Typography>
+            <Typography variant="body1">
+              Select a plant above to view the vehicle queue
+            </Typography>
+          </Box>
+        )}
       </Container>
 
-           <PWAInstallButton 
+      {/* Settings Panel */}
+      <SettingsPanel
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        onSettingsChange={handleSettingsChange}
+        vehicles={vehicles}
+      />
+
+      <PWAInstallButton 
               variant="banner"
               position="top-right"
               autoPromptDelay={2000}
             />
-
+   
     </Box>
   )
 }
-
-   
 
 export default Dashboard

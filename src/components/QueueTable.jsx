@@ -20,7 +20,7 @@ import {
   ArrowForward
 } from '@mui/icons-material'
 
-// Import Swiper React components
+import TooltipContent from './TooltipContent'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { Pagination } from 'swiper/modules'
 
@@ -28,7 +28,7 @@ import { Pagination } from 'swiper/modules'
 import 'swiper/css'
 import 'swiper/css/pagination'
 
-const getVehicleStyle = (vehicle) => {
+const getVehicleStyle = (vehicle , legendSettings = {}) => {
   let backgroundColor = '#808080'
   let borderStyle = {}
 
@@ -37,12 +37,12 @@ const getVehicleStyle = (vehicle) => {
   const breakdown = vehicle.raw_score.find(f => f.name === "Vehicle Breakdown");
   // 1. Check Trial Mix score
   const trialMix = vehicle.raw_score.find(f => f.factor_id === 6);
-  if (trialMix && trialMix.score > 0) {
+  if (trialMix && trialMix.score > 0 && legendSettings["Immediate Attention"]) {
     data.important = true;
   }
 
   // 2. Check Cancelled Data
-  if (data?.cancelled !== null) {
+  if (data?.cancelled !== null && legendSettings["Immediate Attention"]) {
     let cancelVehicle = null;
     if (Array.isArray(data.cancelled)) {
       cancelVehicle = data.cancelled;
@@ -75,7 +75,7 @@ const getVehicleStyle = (vehicle) => {
 
     if (
       message.feedback_type === "Balance Concrete" ||
-      message.feedback_type === "Load Reject"
+      message.feedback_type === "Load Reject" && legendSettings["Immediate Attention"]
     ) {
       data.important = true;
       data.feedback_qty = message?.message?.Value ?? 0;
@@ -84,7 +84,7 @@ const getVehicleStyle = (vehicle) => {
   }
 
   // 4. Background Color Logic
-  if (data.important) {
+  if (data.important && legendSettings["Immediate Attention"]) {
     backgroundColor = '#C00000';
   } else if (breakdown?.score === 0) {
     backgroundColor = '#404040';
@@ -93,12 +93,12 @@ const getVehicleStyle = (vehicle) => {
   }
 
   // 5. Border Style Logic
-  if (vehicle.priority && vehicle?.compensated) {
+  if (vehicle.priority && vehicle?.compensated && legendSettings.Compensate && legendSettings.Priority) {
     borderStyle = {
       border: '3px solid #FFC000',
       color: '#FFC000',
     };
-  } else if (vehicle.priority) {
+  } else if (vehicle.priority && legendSettings.Priority) {
     borderStyle = {
       border: '3px solid #FFFF00',
       color: '#FFFF00',
@@ -181,69 +181,9 @@ const getFeedbackItems = (vehicle, theme) => {
 };
 
 
-const parseDate = (date) => {
-  if (!date) return 'N/A'
-  const tempDate = new Date(date)
-  tempDate.setHours(tempDate.getHours())
-  const month = tempDate.toLocaleString('default', { month: 'short' })
-  const day = tempDate.toLocaleString('default', { day: '2-digit' })
-  const time = tempDate.toLocaleString('default', { timeStyle: 'short', hour12: false })
-  return `${day}-${month}, ${time}`
-}
 
-const VehicleScores = ({ vehicle }) => {
-  if (!vehicle || !vehicle.raw_score) return null
-  
-  const scores = ('permit_score' in vehicle && vehicle.permit_score)
-    ? vehicle.permit_score
-    : vehicle.raw_score
 
-  const sortedScores = [...scores].sort((a, b) => a.priority - b.priority)
 
-  return (
-    <>
-      {sortedScores.map((data, index) => (
-        <Typography key={index} variant="body2">
-          {parseFloat(data.score).toFixed(2)} - {data.name}
-        </Typography>
-      ))}
-    </>
-  )
-}
-
-const TooltipContent = ({ vehicle }) => (
-  <Box p={2} maxWidth={300}>
-    <Typography variant="body2">
-      Queue #: {vehicle.rank || 'N/A'}
-    </Typography>
-    <Typography variant="body2">
-      Available Since: {parseDate(vehicle.available_since)}
-    </Typography>
-    <Typography variant="body2">
-      Load Qty: {vehicle.feedback_qty || 0}/{vehicle?.load_capacity || 0}
-    </Typography>
-    <Typography variant="body2">
-      Score : {vehicle.score || 0}
-    </Typography>
-    <Typography variant="body2">
-      Job Count : {vehicle.raw_score[3].value || 0}
-    </Typography>
-    <Typography variant="body2">
-      Mileage (KM) : {vehicle.raw_score[7].value || 0}
-    </Typography>
-    <Typography variant="body2">
-      Job Quantity : {vehicle.raw_score[4].value || 0}
-    </Typography>
-        <Typography variant="body2">
-      Job Hours : {vehicle.raw_score[8].value || 0}
-    </Typography>
-
-    <Typography variant="body2" sx={{ mt: 1, mb: 1 }}>
-      ---------------Factor Scores---------------
-    </Typography>
-    <VehicleScores vehicle={vehicle} />
-  </Box>
-)
 
 // Navigation Toggle Component
 const NavigationToggle = ({ navigationMode, setNavigationMode, isMobile, isTablet }) => {
@@ -287,11 +227,13 @@ const NavigationToggle = ({ navigationMode, setNavigationMode, isMobile, isTable
 }
 
 const QueueTable = ({ 
-  vehicles, 
+  vehicles = [], 
   loading, 
-  currentDriverVehicle, 
-  searchTerm,
-  showPerformanceScore = false // Keep this prop for future use
+  searchTerm, 
+  currentDriverVehicle,
+  settings = {},
+  serviceCode,
+  showPerformanceScore = false 
 }) => {
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
@@ -302,6 +244,10 @@ const QueueTable = ({
   const [navigationMode, setNavigationMode] = useState('scroll') // 'swiper' or 'scroll'
   const [scrollModeItemsPerTable, setScrollModeItemsPerTable] = useState(8) // For scroll mode
   const containerRef = useRef(null)
+
+  console.log(settings);
+
+
 
   // Calculate items per slide/table based on viewport (for both modes)
   useEffect(() => {
@@ -545,7 +491,7 @@ const QueueTable = ({
                             <Box
                               onClick={(e) => handleChipClick(e, vehicle)}
                               sx={{
-                                ...getVehicleStyle(vehicle),
+                                ...getVehicleStyle(vehicle, settings.legend),
                                 display: "inline-block",
                                 padding: '4px 8px 2px 8px',
                                 borderRadius: '4px',
@@ -625,7 +571,13 @@ const QueueTable = ({
               horizontal: 'left',
             }}
           >
-            {selectedVehicle && <TooltipContent vehicle={selectedVehicle} />}
+              {selectedVehicle && (
+          <TooltipContent 
+            vehicle={selectedVehicle} 
+            settings={settings}
+            serviceCode={serviceCode}
+          />
+        )}
           </Popover>
         </Box>
       )
@@ -755,7 +707,7 @@ const QueueTable = ({
                               <Box
                                 onClick={(e) => handleChipClick(e, vehicle)}
                                 sx={{
-                                  ...getVehicleStyle(vehicle),
+                                  ...getVehicleStyle(vehicle ,settings.legend),
                                   display:"inline-block",
                                   padding: '4px 8px 2px 8px',
                                   borderRadius:'4px',
@@ -907,7 +859,7 @@ const QueueTable = ({
                             <Box
                                 onClick={(e) => handleChipClick(e, vehicle)}
                                 sx={{
-                                  ...getVehicleStyle(vehicle),
+                                  ...getVehicleStyle(vehicle ,settings.legend),
                                   display:"inline-block",
                                   padding:'5px 15px 3px 15px',
                                   borderRadius:'5px',
