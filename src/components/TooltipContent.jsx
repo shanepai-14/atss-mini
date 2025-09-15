@@ -1,5 +1,3 @@
-// src/components/TooltipContent.jsx
-import React from 'react'
 import { Box, Typography } from '@mui/material'
 import VehicleScores from './VehicleScores'
 
@@ -11,6 +9,12 @@ const parseDate = (date) => {
   const day = tempDate.toLocaleString('default', { day: '2-digit' })
   const time = tempDate.toLocaleString('default', { timeStyle: 'short', hour12: false })
   return `${day}-${month}, ${time}`
+}
+
+const convertMinutesToHours = (minutes) => {
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return `${hours}h ${mins}m`;
 }
 
 const TooltipContent = ({ vehicle, settings, serviceCode }) => (
@@ -37,7 +41,7 @@ const TooltipContent = ({ vehicle, settings, serviceCode }) => (
       <Typography variant="body2">Job Quantity: {vehicle.raw_score[4].value || 0}</Typography>
     )}
     {settings.showJobHours && vehicle.raw_score?.[8] && (
-      <Typography variant="body2">Job Hours: {vehicle.raw_score[8].value || 0}</Typography>
+      <Typography variant="body2">Job Hours: {convertMinutesToHours(vehicle.raw_score[8].value) || 0}</Typography>
     )}
     
     {settings.showFactorScores && (

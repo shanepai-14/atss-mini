@@ -791,7 +791,7 @@ const QueueTable = ({
             horizontal: 'left',
           }}
         >
-          {selectedVehicle && <TooltipContent vehicle={selectedVehicle} />}
+          {selectedVehicle && <TooltipContent vehicle={selectedVehicle} settings={settings}/>}
         </Popover>
       </Box>
     )
@@ -923,7 +923,7 @@ const QueueTable = ({
           horizontal: 'left',
         }}
       >
-        {selectedVehicle && <TooltipContent vehicle={selectedVehicle} />}
+        {selectedVehicle && <TooltipContent vehicle={selectedVehicle}  settings={settings}/>}
       </Popover>
     </>
   )
