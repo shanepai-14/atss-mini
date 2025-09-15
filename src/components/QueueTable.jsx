@@ -191,6 +191,12 @@ const parseDate = (date) => {
   return `${day}-${month}, ${time}`
 }
 
+const convertMinutesToHours = (minutes) => {
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return `${hours}h ${mins}m`;
+}
+
 const VehicleScores = ({ vehicle }) => {
   if (!vehicle || !vehicle.raw_score) return null
   
@@ -235,7 +241,7 @@ const TooltipContent = ({ vehicle }) => (
       Job Quantity : {vehicle.raw_score[4].value || 0}
     </Typography>
         <Typography variant="body2">
-      Job Hours : {vehicle.raw_score[8].value || 0}
+      Job Hours : {convertMinutesToHours(vehicle.raw_score[8].value) || 0}
     </Typography>
 
     <Typography variant="body2" sx={{ mt: 1, mb: 1 }}>
