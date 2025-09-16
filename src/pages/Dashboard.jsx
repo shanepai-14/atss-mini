@@ -140,18 +140,23 @@ const Dashboard = () => {
            <PWAInstallButton variant="button" />
           
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              {/* Settings */}
+                     {admin && (
+            <Tooltip title="Display Settings">
+              <IconButton onClick={() => setSettingsOpen(true)} color="inherit">
+                <SettingsIcon />
+              </IconButton>
+            </Tooltip>
+          )}
+           
+
             {/* Connection Status */}
             <Chip
               icon={<WifiIcon />}
-              label={isRecentUpdate ? 'Connected' : 'Connecting...'}
+              label={isRecentUpdate ? 'Live' : 'Connecting...'}
               color={isRecentUpdate ? 'success' : 'warning'}
               size="small"
-              variant="outlined"
-              sx={{ 
-                color: 'white', 
-                borderColor: 'white',
-                '& .MuiChip-icon': { color: 'white' }
-              }}
+              variant="filled"
             />
             
             {/* Manual Refresh */}
@@ -161,18 +166,7 @@ const Dashboard = () => {
               </IconButton>
             </Tooltip> */}
             
-            {/* Settings */}
-        
-
-          {admin && (
-            <Tooltip title="Display Settings">
-              <IconButton onClick={() => setSettingsOpen(true)} color="inherit">
-                <SettingsIcon />
-              </IconButton>
-            </Tooltip>
-          )}
-           
-            
+      
             {/* Logout */}
             <Tooltip title="Logout">
               <IconButton onClick={handleLogout} color="inherit">
@@ -183,7 +177,7 @@ const Dashboard = () => {
         </Toolbar>
       </AppBar>
 
-      <Container maxWidth="xl" sx={{ py: 3 }}>
+      <Container maxWidth="xxl" sx={{ py: 3 }}>
         {/* Plant Selector */}
         {/* <Box sx={{ mb: 3 }}>
           <PlantSelector 
@@ -193,7 +187,7 @@ const Dashboard = () => {
         </Box> */}
 
         {/* Error Display */}
-        {error && (
+        {/* {error && (
           <Alert 
             severity="error" 
             sx={{ mb: 3 }} 
@@ -205,7 +199,7 @@ const Dashboard = () => {
           >
             {error}
           </Alert>
-        )}
+        )} */}
 
         {/* Vehicle Legend */}
         {selectedPlant && (

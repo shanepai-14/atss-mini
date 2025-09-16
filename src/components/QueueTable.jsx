@@ -245,8 +245,6 @@ const QueueTable = ({
   const [scrollModeItemsPerTable, setScrollModeItemsPerTable] = useState(8) // For scroll mode
   const containerRef = useRef(null)
 
-  console.log(settings);
-
 
 
   // Calculate items per slide/table based on viewport (for both modes)
