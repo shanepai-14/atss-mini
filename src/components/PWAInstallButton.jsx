@@ -154,7 +154,7 @@ const PWAInstallButton = ({
               {isMobile ? <PhoneIcon /> : <ComputerIcon />}
               <Box>
                 <Typography variant="subtitle1" fontWeight="bold">
-                  Install ATSS App
+                  Install VQ App
                 </Typography>
                 <Typography variant="body2" sx={{ opacity: 0.9 }}>
                   Quick access to vehicle queue dashboard
