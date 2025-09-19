@@ -24,7 +24,9 @@ axiosATSSInstance.interceptors.request.use(
     
     if (authData) {
       config.headers.Key = authData.ApiKey
-      config.headers.Instance = authData.userInfo?.UserIDEx?.split(':')[0] || authData.ServiceCode
+      const [prefix] = authData.userInfo?.UserIDEx.split(':');
+      const instance = prefix === "Default" ? "SGP" : prefix;
+      config.headers.Instance = instance || authData.ServiceCode
     }
     
     return config
