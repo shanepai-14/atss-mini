@@ -3,31 +3,54 @@ import axios from 'axios'
 
 const AUTH_BASE_URL = 'https://findplus.w-locate.com:8443/integration'
 
+
+export const normalizeAccount = (account) => {
+    const normalized = { ...account };
+
+    // Handle UserIDEx
+    if (normalized.UserIDEx) {
+        const [prefix, rest] = normalized.UserIDEx.split(':');
+        normalized.UserIDEx = `${prefix === "Default" ? "SGP" : prefix}${rest ? `:${rest}` : ""}`;
+    }
+
+    // Handle ServiceCode
+    if (normalized.ServiceCode === "Default") {
+        normalized.ServiceCode = "SGP";
+    }
+
+    return normalized;
+};
+
+
 export const authenticateUser = async (credentials) => {
   try {
-    const response = await axios.post(`${AUTH_BASE_URL}/Account/Authenticate`, credentials)
-    
-    const { JWT, RefreshToken, ApiKey, ServiceCode, ...userInfo } = response.data
-    
-    // Store all required data in localStorage
+    const { data } = await axios.post(`${AUTH_BASE_URL}/Account/Authenticate`, credentials)
+
+    // Normalize once
+    const normalizedData = normalizeAccount(data)
+
+    const { JwtToken, RefreshToken, ApiKey, ServiceCode, ...userInfo } = normalizedData
+
     const authData = {
-      JWT,
+      JwtToken,
       RefreshToken,
       ApiKey,
       ServiceCode,
       userInfo,
-      loginTime: new Date().toISOString()
+      loginTime: new Date().toISOString(),
     }
-    
+
+    // Store normalized data
     localStorage.setItem('atss_auth', JSON.stringify(authData))
-    localStorage.setItem('atss_token', JWT)
-    localStorage.setItem('atss_account', JSON.stringify(response.data))
-    
+    localStorage.setItem('atss_token', JwtToken)
+    localStorage.setItem('atss_account', JSON.stringify(normalizedData))
+
     return authData
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Authentication failed')
   }
 }
+
 
 export const refreshToken = async () => {
   try {
