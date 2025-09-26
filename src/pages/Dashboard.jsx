@@ -27,7 +27,7 @@ import VehicleLegend from '../components/VehicleLegend'
 import SettingsPanel from '../components/SettingsPanel'
 import { useVehicleQueue } from '../hooks/useVehicleQueue'
 import { settingsManager } from '../utils/settingsManager'
-import { logout, getAuthData } from '../api/auth'
+import { logout, getAuthData , getRole } from '../api/auth'
 import { useNavigate } from 'react-router-dom'
 import PWAInstallButton from '../components/PWAInstallButton';
 
@@ -115,7 +115,8 @@ const Dashboard = () => {
 
   const authData = getAuthData()
   const serviceCode = authData?.ServiceCode
-  const admin = authData?.userInfo.Username == 'shane';
+  const companyID = authData?.userInfo.CompanyID;
+  const isOperator = getRole() == "Operator";
 
   return (
     <Box sx={{ flexGrow: 1, bgcolor: '#f5f5f5', height: '100%' }}>
@@ -134,6 +135,7 @@ const Dashboard = () => {
             selectedPlant={selectedPlant}
             onPlantChange={handlePlantChange}
             serviceCode={serviceCode}
+            companyID={companyID}
           />
           
           
@@ -141,7 +143,7 @@ const Dashboard = () => {
           
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               {/* Settings */}
-                     {admin && (
+                     {isOperator && (
             <Tooltip title="Display Settings">
               <IconButton onClick={() => setSettingsOpen(true)} color="inherit">
                 <SettingsIcon />

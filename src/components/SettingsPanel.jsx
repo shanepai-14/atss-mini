@@ -116,6 +116,15 @@ const SettingsPanel = ({ open, onClose, onSettingsChange, vehicles = [] }) => {
           <FormControlLabel
             control={
               <Switch
+                checked={settings.zoningTimestamp || false}
+                onChange={(e) => handleSettingChange('zoningTimestamp', e.target.checked)}
+              />
+            }
+            label="Zone Entry"
+          />
+          <FormControlLabel
+            control={
+              <Switch
                 checked={settings.showLoadQty || false}
                 onChange={(e) => handleSettingChange('showLoadQty', e.target.checked)}
               />

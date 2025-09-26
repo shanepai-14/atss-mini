@@ -4,12 +4,13 @@ import VehicleScores from './VehicleScores'
 const parseDate = (date) => {
   if (!date) return 'N/A'
   const tempDate = new Date(date)
-  tempDate.setHours(tempDate.getHours())
+  tempDate.setHours(tempDate.getHours() + 8) // ✅ add 8 hours
   const month = tempDate.toLocaleString('default', { month: 'short' })
   const day = tempDate.toLocaleString('default', { day: '2-digit' })
   const time = tempDate.toLocaleString('default', { timeStyle: 'short', hour12: false })
   return `${day}-${month}, ${time}`
 }
+
 
 const convertMinutesToHours = (minutes) => {
   const hours = Math.floor(minutes / 60);
@@ -24,6 +25,9 @@ const TooltipContent = ({ vehicle, settings, serviceCode }) => (
     )}
     {settings.showAvailableSince && (
       <Typography variant="body2">Available Since: {parseDate(vehicle.available_since)}</Typography>
+    )}
+    {settings.zoningTimestamp && (
+      <Typography variant="body2">Zone Entry: {parseDate(vehicle.zoning_timestamp)}</Typography>
     )}
     {settings.showLoadQty && (
       <Typography variant="body2">Load Qty: {vehicle.feedback_qty || 0}/{vehicle?.load_capacity || 0}</Typography>

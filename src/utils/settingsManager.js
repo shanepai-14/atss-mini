@@ -5,6 +5,7 @@ import { getAuthData } from '../api/auth'
 const DEFAULT_SETTINGS = {
   showQueue: true,
   showAvailableSince: true,
+  zoningTimestamp: true,
   showLoadQty: true,
   showScore: true,
   showJobCount: true,
@@ -92,6 +93,7 @@ const DEFAULT_SETTINGS = {
 const DEFAULT_SETTINGS_SGP = {
   showQueue: true,
   showAvailableSince: true,
+  zoningTimestamp:true,
   showLoadQty: true,
   showScore: true,
   showJobCount: true,

@@ -1,15 +1,14 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   FormControl,
   InputLabel,
   Select,
   MenuItem,
   Box,
-  Typography,
 } from "@mui/material";
 import { axiosFindPlusInstance } from "../api/axiosInstance";
 
-const PlantSelector = ({ selectedPlant, onPlantChange, serviceCode }) => {
+const PlantSelector = ({ selectedPlant, onPlantChange, serviceCode , companyID }) => {
   const [plants, setPlants] = useState([]);
   const [loading, setLoading] = useState(true);
   const hasFetchedRef = useRef(false);
@@ -26,18 +25,22 @@ const PlantSelector = ({ selectedPlant, onPlantChange, serviceCode }) => {
         const plantsData = response.data || [];
 
         if (serviceCode === "SGP" || serviceCode === "Default") {
-
           setPlants(plantsData);
-        } else {
+        } else if(serviceCode === "ICPL" && companyID == 2) {
           setPlants([plantsData[6]]);
+        } else {
+          setPlants(plantsData);
         }
 
         // Auto-select first plant if none selected
         if (plantsData.length > 0 && !selectedPlant) {
+
           if (serviceCode === "SGP" || serviceCode === "Default") {
             onPlantChange(plantsData[4]);
-          } else {
+          } else if(serviceCode === "ICPL" && companyID == 2) {
             onPlantChange(plantsData[6]);
+          } else{
+            onPlantChange(plantsData[0]);
           }
         }
       } catch (error) {
