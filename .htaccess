@@ -1,0 +1,12 @@
+RewriteEngine On
+# App is served from /vehicle-queue, so keep the rewrite base in that scope
+RewriteBase /vehicle-queue/
+
+# Let direct access to the built index pass through
+RewriteRule ^index\.html$ - [L]
+
+# For any request that isn't a real file/dir/link, serve the SPA entry point
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-l
+RewriteRule . /vehicle-queue/index.html [L]
