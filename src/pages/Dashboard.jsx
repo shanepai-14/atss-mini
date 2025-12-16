@@ -110,7 +110,7 @@ const Dashboard = () => {
 
   const handleLogout = () => {
     logout()
-    navigate('/vehicle-queue')
+    navigate('/atss-vehicle-queue')
   }
 
   const authData = getAuthData()

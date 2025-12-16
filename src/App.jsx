@@ -47,7 +47,7 @@ const ProtectedRoute = ({ children }) => {
     )
   }
 
-  return authenticated ? children : <Navigate to="/vehicle-queue" replace />
+  return authenticated ? children : <Navigate to="/atss-vehicle-queue" replace />
 }
 
 // Public Route Component - Redirects to dashboard if already authenticated
@@ -78,14 +78,14 @@ const PublicRoute = ({ children }) => {
     )
   }
 
-  return authenticated ? <Navigate to="/vehicle-queue/dashboard" replace /> : children
+  return authenticated ? <Navigate to="/atss-vehicle-queue/dashboard" replace /> : children
 }
 
 // Simple Routes Configuration
 const routes = [
   // Public Routes - Redirect to dashboard if already authenticated
   {
-    path: "/vehicle-queue/",
+    path: "/atss-vehicle-queue/",
     element: (
       <PublicRoute>
         <Login />
@@ -95,7 +95,7 @@ const routes = [
   
   // Protected Routes - Require authentication
   {
-    path: "/vehicle-queue/dashboard",
+    path: "/atss-vehicle-queue/dashboard",
     element: (
       <ProtectedRoute>
         <Dashboard />
@@ -106,7 +106,7 @@ const routes = [
   // Catch all route - redirect to appropriate page
   {
     path: "*",
-    element: <Navigate to="/vehicle-queue" replace />
+    element: <Navigate to="/atss-vehicle-queue" replace />
   }
 ]
 

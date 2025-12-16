@@ -4,7 +4,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/vehicle-queue',
+  base: '/atss-vehicle-queue',
   plugins: [
     react(),
     VitePWA({
@@ -18,8 +18,8 @@ export default defineConfig({
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait',
-        scope: '/vehicle-queue',
-        start_url: '/vehicle-queue',
+        scope: '/atss-vehicle-queue',
+        start_url: '/atss-vehicle-queue',
         icons: [
           {
             src: 'android-launchericon-144-144.png',
