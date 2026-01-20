@@ -35,6 +35,7 @@ const getVehicleStyle = (vehicle , legendSettings = {}) => {
   let data = vehicle; // assuming `vehicle` holds all relevant data structure including `cancelled`, `message_data`, etc.
   data.important = false; // default
   const breakdown = vehicle.raw_score.find(f => f.name === "Vehicle Breakdown");
+  const ready = vehicle.raw_score.find(f => f.name === "Driver Ready")?.score > 0;
   // 1. Check Trial Mix score
   const trialMix = vehicle.raw_score.find(f => f.factor_id === 6);
   if (trialMix && trialMix.score > 0 && legendSettings["Immediate Attention"]) {
@@ -88,7 +89,7 @@ const getVehicleStyle = (vehicle , legendSettings = {}) => {
     backgroundColor = '#C00000';
   } else if (breakdown?.score === 0) {
     backgroundColor = '#404040';
-  } else if (vehicle.score > 0 && vehicle.status !== "On-break") {
+  } else if (ready && vehicle.status !== "On-break") {
     backgroundColor = '#3C7D21';
   }
 
