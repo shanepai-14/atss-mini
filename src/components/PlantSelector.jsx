@@ -6,7 +6,7 @@ import {
   MenuItem,
   Box,
 } from "@mui/material";
-import { axiosFindPlusInstance } from "../api/axiosInstance";
+import { axiosATSSInstance } from "../api/axiosInstance";
 
 const PlantSelector = ({ selectedPlant, onPlantChange, serviceCode , companyID }) => {
   const [plants, setPlants] = useState([]);
@@ -21,26 +21,22 @@ const PlantSelector = ({ selectedPlant, onPlantChange, serviceCode , companyID }
     const fetchPlants = async () => {
       try {
         // Use the correct FindPlus API endpoint for zones/origins
-        const response = await axiosFindPlusInstance.post("/Zone/origin");
+        const response = await axiosATSSInstance.get("vehicle-roster/active");
         const plantsData = response.data || [];
+        const activePlants = plantsData.filter(
+          (plant) => plant.is_active && plant.Name !== "PUNGGOL TIMOR"
+        );
 
-        if (serviceCode === "SGP" || serviceCode === "Default") {
-          setPlants(plantsData);
-        } else if(serviceCode === "ICPL" && companyID == 2) {
-          setPlants([plantsData[6]]);
-        } else {
-          setPlants(plantsData);
-        }
+        setPlants(activePlants);
 
         // Auto-select first plant if none selected
-        if (plantsData.length > 0 && !selectedPlant) {
-
+        if (activePlants.length > 0 && !selectedPlant) {
           if (serviceCode === "SGP" || serviceCode === "Default") {
-            onPlantChange(plantsData[4]);
-          } else if(serviceCode === "ICPL" && companyID == 2) {
-            onPlantChange(plantsData[6]);
-          } else{
-            onPlantChange(plantsData[0]);
+            onPlantChange(activePlants[4] || activePlants[0]);
+          } else if (serviceCode === "ICPL" && companyID == 2) {
+            onPlantChange(activePlants[6] || activePlants[0]);
+          } else {
+            onPlantChange(activePlants[0]);
           }
         }
       } catch (error) {
